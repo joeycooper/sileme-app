@@ -33,24 +33,57 @@ export type TokenPair = {
   token_type: "bearer";
   access_expires_in: number;
   refresh_expires_in: number;
+  refresh_token_id: number;
 };
 
 export type LoginPayload = {
   phone: string;
   password: string;
+  device_name?: string | null;
 };
 
 export type RegisterPayload = {
   phone: string;
   password: string;
   timezone: string;
+  sms_code: string;
+};
+
+export type Device = {
+  id: number;
+  device_name: string | null;
+  user_agent: string | null;
+  ip_address: string | null;
+  created_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+};
+
+export type DailySummary = {
+  date: string;
+  checked_in: boolean;
+  sleep_hours: number | null;
+  energy: number | null;
+  mood: number | null;
+};
+
+export type Summary = {
+  days: number;
+  checkins: number;
+  checkin_rate: number;
+  avg_sleep_hours: number;
+  avg_energy: number;
+  avg_mood: number;
+  items: DailySummary[];
 };
 
 const API_BASE = "http://localhost:8000";
 const STORAGE_KEY = "sileme_auth";
+const DEVICE_KEY = "sileme_device_id";
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
+let refreshTokenId: number | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 
 function loadTokensFromStorage() {
@@ -61,6 +94,7 @@ function loadTokensFromStorage() {
     const data = JSON.parse(raw) as TokenPair;
     accessToken = data.access_token;
     refreshToken = data.refresh_token;
+    refreshTokenId = data.refresh_token_id ?? null;
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -69,18 +103,29 @@ function loadTokensFromStorage() {
 function saveTokens(tokens: TokenPair) {
   accessToken = tokens.access_token;
   refreshToken = tokens.refresh_token;
+  refreshTokenId = tokens.refresh_token_id;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tokens));
+  localStorage.setItem(DEVICE_KEY, String(tokens.refresh_token_id));
 }
 
 export function clearTokens() {
   accessToken = null;
   refreshToken = null;
+  refreshTokenId = null;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(DEVICE_KEY);
 }
 
 export function hasRefreshToken(): boolean {
   loadTokensFromStorage();
   return Boolean(refreshToken);
+}
+
+export function getCurrentDeviceId(): number | null {
+  loadTokensFromStorage();
+  if (refreshTokenId) return refreshTokenId;
+  const stored = localStorage.getItem(DEVICE_KEY);
+  return stored ? Number(stored) : null;
 }
 
 async function extractErrorMessage(res: Response): Promise<string> {
@@ -106,6 +151,8 @@ function toFriendlyMessage(raw: string): string {
   const lower = raw.toLowerCase();
   if (lower.includes("invalid credentials")) return "手机号或密码不正确。";
   if (lower.includes("phone already registered")) return "这个手机号已注册，请直接登录。";
+  if (lower.includes("invalid sms code")) return "验证码不正确，请重试。";
+  if (lower.includes("user not found")) return "该手机号未注册，请先注册。";
   if (lower.includes("not authenticated")) return "请先登录再操作。";
   if (lower.includes("invalid token")) return "登录状态已失效，请重新登录。";
   if (lower.includes("refresh token")) return "登录已过期，请重新登录。";
@@ -188,6 +235,27 @@ export async function authRegister(payload: RegisterPayload): Promise<void> {
   await handleJson<AuthUser>(res);
 }
 
+export async function requestSmsCode(phone: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/auth/request-code`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone })
+  });
+  await handleJson<{ status: string }>(res);
+}
+
+export async function getDevices(): Promise<Device[]> {
+  const res = await apiFetch(`${API_BASE}/auth/devices`);
+  return handleJson<Device[]>(res);
+}
+
+export async function logoutDevice(deviceId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/auth/logout-device?device_id=${deviceId}`, {
+    method: "POST"
+  });
+  await handleJson<{ status: string }>(res);
+}
+
 export async function authLogout(): Promise<void> {
   loadTokensFromStorage();
   if (refreshToken) {
@@ -225,4 +293,22 @@ export async function upsertToday(payload: CheckinPayload): Promise<Checkin> {
 export async function getStats(): Promise<Stats> {
   const res = await apiFetch(`${API_BASE}/checkins/stats`);
   return handleJson<Stats>(res);
+}
+
+export async function getSummary(days = 14): Promise<Summary> {
+  const res = await apiFetch(`${API_BASE}/checkins/summary?days=${days}`);
+  return handleJson<Summary>(res);
+}
+
+export async function getCheckins(params: {
+  limit?: number;
+  offset?: number;
+  order?: "asc" | "desc";
+}): Promise<Checkin[]> {
+  const search = new URLSearchParams();
+  if (params.limit) search.set("limit", String(params.limit));
+  if (params.offset) search.set("offset", String(params.offset));
+  if (params.order) search.set("order", params.order);
+  const res = await apiFetch(`${API_BASE}/checkins?${search.toString()}`);
+  return handleJson<Checkin[]>(res);
 }

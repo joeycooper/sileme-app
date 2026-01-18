@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import Home from "./pages/Home";
+import History from "./pages/History";
 import Login from "./pages/Login";
-import { authLogout, getMe, hasRefreshToken } from "./services/api";
+import Profile from "./pages/Profile";
+import { getMe, hasRefreshToken } from "./services/api";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [page, setPage] = useState<"home" | "history" | "profile">("home");
 
   useEffect(() => {
     async function init() {
@@ -29,30 +32,72 @@ export default function App() {
   async function handleLoginSuccess() {
     const me = await getMe();
     setUserPhone(me.phone);
-  }
-
-  async function handleLogout() {
-    await authLogout();
-    setUserPhone(null);
+    setPage("home");
   }
 
   if (loading) {
     return <div className="loading">加载中...</div>;
   }
 
-  if (!userPhone) {
-    return <Login onSuccess={handleLoginSuccess} />;
-  }
-
   return (
     <div className="authed">
       <div className="auth-bar">
-        <span>{userPhone}</span>
-        <button className="link" type="button" onClick={handleLogout}>
-          退出登录
-        </button>
+        <div className="tabs">
+          <button
+            className={`tab ${page === "home" ? "active" : ""}`}
+            type="button"
+            onClick={() => setPage("home")}
+          >
+            打卡
+          </button>
+          <button
+            className={`tab ${page === "history" ? "active" : ""}`}
+            type="button"
+            onClick={() => setPage("history")}
+          >
+            历史
+          </button>
+          <button
+            className={`tab ${page === "profile" ? "active" : ""}`}
+            type="button"
+            onClick={() => setPage("profile")}
+          >
+            我的
+          </button>
+        </div>
       </div>
-      <Home />
+      {page === "home" ? (
+        <Home isAuthed={Boolean(userPhone)} onRequireLogin={() => setPage("profile")} />
+      ) : page === "history" ? (
+        userPhone ? <History /> : <Login onSuccess={handleLoginSuccess} />
+      ) : userPhone ? (
+        <Profile />
+      ) : (
+        <Login onSuccess={handleLoginSuccess} />
+      )}
+      <nav className="bottom-nav" aria-label="页面导航">
+        <button
+          className={`nav-item ${page === "home" ? "active" : ""}`}
+          type="button"
+          onClick={() => setPage("home")}
+        >
+          打卡
+        </button>
+        <button
+          className={`nav-item ${page === "history" ? "active" : ""}`}
+          type="button"
+          onClick={() => setPage("history")}
+        >
+          历史
+        </button>
+        <button
+          className={`nav-item ${page === "profile" ? "active" : ""}`}
+          type="button"
+          onClick={() => setPage("profile")}
+        >
+          我的
+        </button>
+      </nav>
     </div>
   );
 }

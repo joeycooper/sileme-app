@@ -15,44 +15,89 @@ const emptyForm = {
   note: ""
 };
 
-export default function Home() {
+type HomeProps = {
+  isAuthed: boolean;
+  onRequireLogin?: () => void;
+};
+
+export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
   const [today, setToday] = useState<Checkin | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [lastCheckinTime, setLastCheckinTime] = useState<string | null>(null);
+  const [lastCheckinTs, setLastCheckinTs] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState("24:00:00");
   const noticeTimer = useRef<number | null>(null);
-
-  function setNoticeWithAutoClear(message: string) {
-    setNotice(message);
-    if (noticeTimer.current) {
-      window.clearTimeout(noticeTimer.current);
-    }
-    noticeTimer.current = window.setTimeout(() => {
-      setNotice(null);
-      noticeTimer.current = null;
-    }, 2500);
-  }
+  const lastCheckinTsRef = useRef<number | null>(null);
 
   useEffect(() => {
-    void refresh();
+    if (isAuthed) {
+      void refresh();
+    } else {
+      setToday(null);
+      setStats(null);
+      setLastCheckinTime(null);
+    }
     return () => {
       if (noticeTimer.current) {
         window.clearTimeout(noticeTimer.current);
       }
     };
+  }, [isAuthed]);
+
+  function getAlarmHours() {
+    const raw = localStorage.getItem("sileme_alarm_hours");
+    const hours = raw ? Number(raw) : 24;
+    if (Number.isNaN(hours) || hours < 1) return 24;
+    return Math.min(hours, 72);
+  }
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      const ts = lastCheckinTsRef.current;
+      const totalMs = getAlarmHours() * 60 * 60 * 1000;
+      if (!ts) {
+        const hours = getAlarmHours();
+        setCountdown(`${String(hours).padStart(2, "0")}:00:00`);
+        return;
+      }
+      const elapsed = Date.now() - ts;
+      const remaining = Math.max(totalMs - elapsed, 0);
+      if (remaining === 0) {
+        const hoursPassed = Math.floor(elapsed / 3600000);
+        setCountdown(
+          `请尽快打卡，不要让家人朋友担心（已过${hoursPassed}小时）`
+        );
+        return;
+      }
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      setCountdown(
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(
+          seconds
+        ).padStart(2, "0")}`
+      );
+    }, 1000);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   async function refresh() {
     setError(null);
     try {
+      const enterTs = Date.now();
       const [todayRes, statsRes] = await Promise.all([
         getTodayCheckin(),
         getStats()
       ]);
       setToday(todayRes);
       setStats(statsRes);
+      lastCheckinTsRef.current = enterTs;
+      setLastCheckinTs(enterTs);
+      localStorage.setItem("sileme_countdown_ts", String(enterTs));
       if (todayRes) {
         setForm({
           sleep_hours: todayRes.sleep_hours?.toString() ?? "",
@@ -60,11 +105,11 @@ export default function Home() {
           mood: todayRes.mood?.toString() ?? "",
           note: todayRes.note ?? ""
         });
-        const lastNoticeDate = localStorage.getItem("sileme_notice_date");
-        if (lastNoticeDate !== todayRes.date) {
-          setNoticeWithAutoClear("打卡成功");
-          localStorage.setItem("sileme_notice_date", todayRes.date);
-        }
+        const storedTime = localStorage.getItem(`sileme_checkin_time_${todayRes.date}`);
+        setLastCheckinTime(storedTime);
+        localStorage.setItem("sileme_notice_date", todayRes.date);
+      } else {
+        setLastCheckinTime(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载失败");
@@ -77,8 +122,35 @@ export default function Home() {
     return Number.isFinite(num) ? num : null;
   }
 
+  function renderStars(value: string, onChange: (v: string) => void) {
+    const current = Number(value || 0);
+    return (
+      <div className="stars">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            className={`star ${current >= star ? "active" : ""}`}
+            onClick={() => onChange(String(star))}
+            aria-label={`设置为 ${star} 分`}
+          >
+            ★
+          </button>
+        ))}
+        <span className="star-value">{value || "-"}</span>
+      </div>
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!isAuthed) {
+      setError("请先登录");
+      if (onRequireLogin) {
+        onRequireLogin();
+      }
+      return;
+    }
     setLoading(true);
     setError(null);
     const wasCheckedIn = Boolean(today);
@@ -95,11 +167,16 @@ export default function Home() {
       setToday(saved);
       const statsRes = await getStats();
       setStats(statsRes);
-      if (wasCheckedIn) {
-        setNoticeWithAutoClear("更新打卡成功");
-      } else {
-        setNoticeWithAutoClear("打卡成功");
-      }
+      const time = new Date().toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      const ts = Date.now();
+      localStorage.setItem(`sileme_checkin_time_${saved.date}`, time);
+      localStorage.setItem("sileme_countdown_ts", String(ts));
+      setLastCheckinTime(time);
+      lastCheckinTsRef.current = ts;
+      setLastCheckinTs(ts);
       localStorage.setItem("sileme_notice_date", saved.date);
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败");
@@ -112,75 +189,80 @@ export default function Home() {
     <div className="page">
       <header className="hero">
         <div>
-          <p className="eyebrow">死了么 App</p>
-          <h1>每天报平安</h1>
-          <p className="subhead">一句话：今天还好。记录自己，也安抚别人。</p>
+          <p className="eyebrow">热爱生活，温柔待己</p>
+          <h1>每日报平安</h1>
+          <p className="subhead">
+            {new Date().toLocaleDateString("zh-CN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              weekday: "long"
+            })}
+          </p>
         </div>
         <div className={`status ${today ? "alive" : "empty"}`}>
-          <span>{today ? "今日已打卡" : "今日未打卡"}</span>
-          <strong>{today ? "✅" : "⏳"}</strong>
+          <span>
+            {countdown.includes("请尽快打卡")
+              ? countdown
+              : `距离自动警报触发还有 ${countdown}`}
+          </span>
+          <strong>⏳</strong>
         </div>
       </header>
 
       <section className="card">
         <form onSubmit={handleSubmit} className="form">
-          <div className="form-header">
-            <h2>我还活着 ✅</h2>
-            <p>可以只点按钮，也可以填一些感觉。</p>
+          <div className="alive-wrap">
+            <button
+              className={`alive-circle ${loading ? "is-loading" : ""}`}
+              type="submit"
+              disabled={loading}
+            >
+              <span className="alive-text">我还活着</span>
+              {loading ? <span className="alive-spinner" /> : null}
+            </button>
+            <span className="alive-sub">
+              {today
+                ? `今日打卡已更新${lastCheckinTime ? ` ${lastCheckinTime}` : ""}`
+                : "今日未打卡"}
+            </span>
           </div>
 
-          <div className="fields">
-            <label>
-              睡眠 (小时)
-              <input
-                type="number"
-                min="0"
-                max="24"
-                placeholder="比如 7"
-                value={form.sleep_hours}
-                onChange={(e) => setForm({ ...form, sleep_hours: e.target.value })}
-              />
-            </label>
-            <label>
-              精力 (1-5)
-              <input
-                type="number"
-                min="1"
-                max="5"
-                placeholder="3"
-                value={form.energy}
-                onChange={(e) => setForm({ ...form, energy: e.target.value })}
-              />
-            </label>
-            <label>
-              心情 (1-5)
-              <input
-                type="number"
-                min="1"
-                max="5"
-                placeholder="4"
-                value={form.mood}
-                onChange={(e) => setForm({ ...form, mood: e.target.value })}
-              />
-            </label>
-            <label className="span-2">
-              备注
-              <textarea
-                rows={3}
-                placeholder="今天的我..."
-                value={form.note}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-              />
-            </label>
-          </div>
-
-          <button className="primary" type="submit" disabled={loading}>
-            {loading ? "提交中..." : "我还活着 ✅"}
-          </button>
-
-          {notice ? <p className="notice">{notice}</p> : null}
           {error ? <p className="error">{error}</p> : null}
         </form>
+      </section>
+
+      <section className="card">
+        <div className="fields">
+          <label>
+            睡眠 (小时)
+            <input
+              type="number"
+              min="0"
+              max="24"
+              placeholder="比如 7"
+              value={form.sleep_hours}
+              onChange={(e) => setForm({ ...form, sleep_hours: e.target.value })}
+            />
+          </label>
+          <label>
+            精力 (1-5)
+            {renderStars(form.energy, (value) => setForm({ ...form, energy: value }))}
+          </label>
+          <label>
+            心情 (1-5)
+            {renderStars(form.mood, (value) => setForm({ ...form, mood: value }))}
+          </label>
+          <label className="span-2">
+            备注
+            <textarea
+              rows={3}
+              placeholder="今天的我..."
+              value={form.note}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
+            />
+          </label>
+        </div>
       </section>
 
       <section className="stats">

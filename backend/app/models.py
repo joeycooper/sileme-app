@@ -24,6 +24,9 @@ class RefreshToken(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    device_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )
