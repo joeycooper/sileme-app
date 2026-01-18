@@ -8,6 +8,7 @@ import {
   getTodayCheckin,
   upsertToday
 } from "../services/api";
+import { IconClock } from "../components/icons";
 
 const emptyForm = {
   sleep_hours: "",
@@ -199,7 +200,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
   }
 
   return (
-    <div className="page">
+    <div className="page page-home">
       <header className="hero">
         <div>
           <p className="eyebrow">热爱生活，温柔待己</p>
@@ -214,12 +215,12 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
           </p>
         </div>
         <div className={`status ${today ? "alive" : "empty"}`}>
+          <IconClock className="status-icon" />
           <span>
             {countdown.includes("请尽快打卡")
               ? countdown
               : `距离自动警报触发还有 ${countdown}`}
           </span>
-          <strong>⏳</strong>
         </div>
       </header>
 
@@ -247,29 +248,35 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
 
       <section className="card">
         <div className="fields">
-          <label>
-            睡眠 (小时)
-            <input
-              type="number"
-              min="0"
-              max="24"
-              placeholder="比如 7"
-              value={form.sleep_hours}
-              onChange={(e) => setForm({ ...form, sleep_hours: e.target.value })}
-            />
-          </label>
-          <label>
-            精力 (1-5)
-            {renderStars(form.energy, (value) => setForm({ ...form, energy: value }))}
-          </label>
-          <label>
-            心情 (1-5)
-            {renderStars(form.mood, (value) => setForm({ ...form, mood: value }))}
-          </label>
+          <div className="compact-row">
+            <label className="compact-field">
+              睡眠
+              <input
+                type="number"
+                min="0"
+                max="24"
+                placeholder="7"
+                value={form.sleep_hours}
+                onChange={(e) => setForm({ ...form, sleep_hours: e.target.value })}
+              />
+            </label>
+            <label className="compact-field">
+              精力
+              <div className="compact-stars">
+                {renderStars(form.energy, (value) => setForm({ ...form, energy: value }))}
+              </div>
+            </label>
+            <label className="compact-field">
+              心情
+              <div className="compact-stars">
+                {renderStars(form.mood, (value) => setForm({ ...form, mood: value }))}
+              </div>
+            </label>
+          </div>
           <label className="span-2">
             备注
-            <textarea
-              rows={3}
+            <input
+              type="text"
               placeholder="今天的我..."
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}

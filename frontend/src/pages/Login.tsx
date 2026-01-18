@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authLogin, authRegister, requestSmsCode } from "../services/api";
 
 type Props = {
@@ -18,6 +18,13 @@ export default function Login({ onSuccess }: Props) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.body.classList.add("login-mode");
+    return () => {
+      document.body.classList.remove("login-mode");
+    };
+  }, []);
 
   function normalizePhone(input: string) {
     const digits = input.replace(/\D/g, "");
@@ -116,6 +123,8 @@ export default function Login({ onSuccess }: Props) {
               placeholder="13800138000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              autoComplete="tel"
+              inputMode="numeric"
               required
             />
             {phoneError ? <span className="field-error">{phoneError}</span> : null}
@@ -127,6 +136,7 @@ export default function Login({ onSuccess }: Props) {
               placeholder="至少 8 位"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete={isRegister ? "new-password" : "current-password"}
               required
             />
             {passwordError ? <span className="field-error">{passwordError}</span> : null}
@@ -134,13 +144,14 @@ export default function Login({ onSuccess }: Props) {
           {isRegister ? (
             <label>
               确认密码
-              <input
-                type="password"
-                placeholder="再次输入密码"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
+                <input
+                  type="password"
+                  placeholder="再次输入密码"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
               {confirmError ? <span className="field-error">{confirmError}</span> : null}
             </label>
           ) : null}
@@ -153,6 +164,7 @@ export default function Login({ onSuccess }: Props) {
                   placeholder="输入 123456"
                   value={smsCode}
                   onChange={(e) => setSmsCode(e.target.value)}
+                  inputMode="numeric"
                   required
                 />
                 <button

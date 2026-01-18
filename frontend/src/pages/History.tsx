@@ -92,7 +92,7 @@ export default function History() {
     .filter((value): value is number => value !== null && value !== undefined);
 
   return (
-    <div className="page">
+    <div className="page page-history">
       {error ? <p className="error">{error}</p> : null}
 
       <section className="stats">
@@ -125,42 +125,62 @@ export default function History() {
             {loading ? <span>加载中...</span> : <Sparkline values={moodValues} />}
           </div>
         </div>
+        <div className="trend-legend">
+          <span>
+            <i className="legend-dot legend-energy" aria-hidden="true" />
+            精力
+          </span>
+          <span>
+            <i className="legend-dot legend-mood" aria-hidden="true" />
+            心情
+          </span>
+        </div>
       </section>
 
       <section className="card">
-        <div className="form-header">
-          <h2>最近打卡</h2>
-          <p>按日期查看最近 14 天记录。</p>
-        </div>
-        <div className="export-row">
+        <div className="form-header header-row">
+          <div>
+            <h2>最近打卡</h2>
+            <p>按日期查看最近 14 天记录。</p>
+          </div>
           <button
-            className="secondary"
+            className="secondary export-button"
             type="button"
             onClick={() => setNoticeWithAutoClear("导出功能将在下一版本支持。")}
           >
             导出 CSV
           </button>
-          {notice ? <span className="inline-notice">{notice}</span> : null}
         </div>
         <div className="history-list">
           {filteredItems.length === 0 ? (
-            <p className="muted">还没有打卡记录。</p>
+            <div className="empty-state">
+              <div className="empty-illustration" aria-hidden="true" />
+              <p>还没有打卡记录</p>
+              <span>在首页点击“我还活着”，这里就会出现记录。</span>
+            </div>
           ) : (
             filteredItems
               .slice()
               .reverse()
               .map((item) => (
             <div key={item.date} className={`history-row ${item.checked_in ? "hit" : "miss"}`}>
-              <span>{formatDate(item.date)}</span>
-              <span>{item.checked_in ? "✅" : "—"}</span>
-              <span>睡眠 {item.sleep_hours ?? "-"}h</span>
-              <span>精力 {item.energy ?? "-"}</span>
-              <span>心情 {item.mood ?? "-"}</span>
+              <div className="history-date">
+                <span>{formatDate(item.date)}</span>
+                <span className="muted-inline">
+                  {item.checked_in ? "已记录" : "未记录"}
+                </span>
+              </div>
+              <span className="history-metrics">
+                睡眠 {item.sleep_hours ?? "-"}h · 精力 {item.energy ?? "-"} · 心情{" "}
+                {item.mood ?? "-"}
+              </span>
             </div>
               ))
           )}
         </div>
       </section>
+
+      {notice ? <div className="toast">{notice}</div> : null}
 
     </div>
   );

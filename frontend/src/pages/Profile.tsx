@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { authLogout, getContacts, getMe, saveContacts, updateProfile } from "../services/api";
+import { IconLogout, IconNote, IconPhone, IconTimer, IconUser } from "../components/icons";
 
 type ProfileForm = {
   avatarUrl: string;
@@ -260,27 +261,37 @@ export default function Profile() {
       <section className="card">
         <div className="profile-menu">
           <button className="profile-row" type="button" onClick={() => setActivePanel("profile")}>
-            <span className="icon">👤</span>
+            <span className="icon">
+              <IconUser className="icon-svg" />
+            </span>
             <span>个人信息</span>
             <span className="chevron">›</span>
           </button>
           <button className="profile-row" type="button" onClick={openContacts}>
-            <span className="icon">📞</span>
+            <span className="icon">
+              <IconPhone className="icon-svg" />
+            </span>
             <span>紧急联系人</span>
             <span className="chevron">›</span>
           </button>
           <button className="profile-row" type="button" onClick={() => setActivePanel("alarm")}>
-            <span className="icon">⏱️</span>
+            <span className="icon">
+              <IconTimer className="icon-svg" />
+            </span>
             <span>自动警报时间</span>
             <span className="chevron">›</span>
           </button>
           <button className="profile-row" type="button" onClick={() => setActivePanel("estate")}>
-            <span className="icon">📜</span>
+            <span className="icon">
+              <IconNote className="icon-svg" />
+            </span>
             <span>遗产分配设置</span>
             <span className="chevron">›</span>
           </button>
           <button className="profile-row danger" type="button" onClick={handleLogout}>
-            <span className="icon">🚪</span>
+            <span className="icon">
+              <IconLogout className="icon-svg" />
+            </span>
             <span>退出登录</span>
             <span className="chevron">›</span>
           </button>
