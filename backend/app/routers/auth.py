@@ -6,8 +6,19 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import RefreshToken, User
-from ..schemas import DeviceOut, LoginRequest, RefreshRequest, SmsRequest, TokenPair, UserCreate, UserOut
+from ..models import Contact, RefreshToken, User
+from ..schemas import (
+    ContactsOut,
+    ContactsPayload,
+    DeviceOut,
+    LoginRequest,
+    ProfileUpdate,
+    RefreshRequest,
+    SmsRequest,
+    TokenPair,
+    UserCreate,
+    UserOut,
+)
 from ..security import (
     create_access_token,
     create_refresh_token,
@@ -190,3 +201,47 @@ def logout_device(
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/me/profile", response_model=UserOut)
+def update_profile(
+    payload: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current_user.nickname = payload.nickname
+    current_user.avatar_url = payload.avatar_url
+    current_user.wechat = payload.wechat
+    current_user.email = payload.email
+    current_user.alarm_hours = payload.alarm_hours
+    current_user.estate_note = payload.estate_note
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.get("/me/contacts", response_model=ContactsOut)
+def get_contacts(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    stmt = select(Contact).where(Contact.user_id == current_user.id)
+    contacts = list(db.scalars(stmt).all())
+    primary = next((c for c in contacts if c.kind == "primary"), None)
+    backups = [c for c in contacts if c.kind == "backup"]
+    return ContactsOut(primary=primary, backups=backups)
+
+
+@router.put("/me/contacts", response_model=ContactsOut)
+def save_contacts(
+    payload: ContactsPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # Replace contacts atomically: delete old, insert new
+    db.query(Contact).where(Contact.user_id == current_user.id).delete()
+    primary = Contact(user_id=current_user.id, kind="primary", **payload.primary.model_dump())
+    db.add(primary)
+    for backup in payload.backups:
+        db.add(Contact(user_id=current_user.id, kind="backup", **backup.model_dump()))
+    db.commit()
+    db.refresh(primary)
+    backups = list(db.scalars(select(Contact).where(Contact.user_id == current_user.id, Contact.kind == "backup")).all())
+    return ContactsOut(primary=primary, backups=backups)

@@ -24,6 +24,13 @@ export type AuthUser = {
   id: number;
   phone: string;
   timezone: string;
+  nickname?: string | null;
+  avatar_url?: string | null;
+  wechat?: string | null;
+  email?: string | null;
+  alarm_hours: number;
+  estate_note?: string | null;
+  last_checkin_at?: string | null;
   created_at: string;
 };
 
@@ -77,7 +84,41 @@ export type Summary = {
   items: DailySummary[];
 };
 
-const API_BASE = "http://localhost:8000";
+export type ProfileUpdate = {
+  nickname?: string | null;
+  avatar_url?: string | null;
+  wechat?: string | null;
+  email?: string | null;
+  alarm_hours: number;
+  estate_note?: string | null;
+};
+
+export type ContactIn = {
+  name: string;
+  relation: string;
+  phone: string;
+  wechat?: string | null;
+  email?: string | null;
+  note?: string | null;
+  avatar_url?: string | null;
+};
+
+export type ContactsPayload = {
+  primary: ContactIn;
+  backups: ContactIn[];
+};
+
+export type ContactOut = ContactIn & {
+  id: number;
+  kind: string;
+};
+
+export type ContactsOut = {
+  primary: ContactOut | null;
+  backups: ContactOut[];
+};
+
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const STORAGE_KEY = "sileme_auth";
 const DEVICE_KEY = "sileme_device_id";
 
@@ -271,6 +312,29 @@ export async function authLogout(): Promise<void> {
 export async function getMe(): Promise<AuthUser> {
   const res = await apiFetch(`${API_BASE}/me`);
   return handleJson<AuthUser>(res);
+}
+
+export async function updateProfile(payload: ProfileUpdate): Promise<AuthUser> {
+  const res = await apiFetch(`${API_BASE}/me/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<AuthUser>(res);
+}
+
+export async function getContacts(): Promise<ContactsOut> {
+  const res = await apiFetch(`${API_BASE}/me/contacts`);
+  return handleJson<ContactsOut>(res);
+}
+
+export async function saveContacts(payload: ContactsPayload): Promise<ContactsOut> {
+  const res = await apiFetch(`${API_BASE}/me/contacts`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<ContactsOut>(res);
 }
 
 export async function getTodayCheckin(): Promise<Checkin | null> {

@@ -15,6 +15,13 @@ class UserOut(BaseModel):
     id: int
     phone: str
     timezone: str
+    nickname: str | None = None
+    avatar_url: str | None = None
+    wechat: str | None = None
+    email: str | None = None
+    alarm_hours: int
+    estate_note: str | None = None
+    last_checkin_at: datetime | None = None
     created_at: datetime
 
     class Config:
@@ -42,6 +49,43 @@ class RefreshRequest(BaseModel):
 
 class SmsRequest(BaseModel):
     phone: str = Field(pattern=r"^1[3-9]\d{9}$")
+
+
+class ProfileUpdate(BaseModel):
+    nickname: str | None = None
+    avatar_url: str | None = None
+    wechat: str | None = None
+    email: str | None = None
+    alarm_hours: int = Field(default=24, ge=1, le=72)
+    estate_note: str | None = None
+
+
+class ContactIn(BaseModel):
+    name: str
+    relation: str
+    phone: str
+    wechat: str | None = None
+    email: str | None = None
+    note: str | None = None
+    avatar_url: str | None = None
+
+
+class ContactsPayload(BaseModel):
+    primary: ContactIn
+    backups: list[ContactIn] = []
+
+
+class ContactOut(ContactIn):
+    id: int
+    kind: str
+
+    class Config:
+        from_attributes = True
+
+
+class ContactsOut(BaseModel):
+    primary: ContactOut | None = None
+    backups: list[ContactOut] = []
 
 
 class DeviceOut(BaseModel):

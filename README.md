@@ -1,33 +1,21 @@
 # 死了么（SiLeMe）App
 
-一个极简的本地单用户「每日报平安打卡」应用。通过简单的打卡与可选的自评信息（睡眠、精力、心情、备注），帮助你持续记录最近的状态，并在首页查看近 30 天的统计概览。
+一个轻量的「每日报平安打卡」应用，支持多用户登录、打卡、统计与个人设置。可在电脑与手机上使用。
 
 ## 功能概览
-- 今日打卡：一键「我还活着 ✅」
-- 可选表单：睡眠时长、精力、心情、备注
+- 一键打卡「我还活着」
 - 每天最多一条打卡（按日期唯一，重复提交会更新）
-- 统计卡片：连续打卡天数、30 天打卡率、平均睡眠
+- 统计概览：连续天数、打卡率、平均睡眠
+- 历史页：最近打卡列表与趋势
+- 登录/注册（手机号 + 密码 + Mock 验证码）
+- 个人设置：昵称/头像/微信/邮箱、自动警报时间、遗产说明
+- 紧急联系人：首选 1 个、备选多个（头像可上传）
 
 ## 技术栈
 - 后端：FastAPI + SQLAlchemy + SQLite
 - 前端：React + TypeScript + Vite
 
-## 项目结构
-```
-backend/
-  app/
-    main.py
-    db.py
-    models.py
-    schemas.py
-    routers/checkins.py
-frontend/
-  src/
-    pages/Home.tsx
-    services/api.ts
-```
-
-## 快速开始
+## 本地启动（常用）
 
 ### 1) 启动后端
 ```bash
@@ -35,10 +23,8 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-后端会自动创建本地数据库文件 `backend/checkins.db`。
 
 ### 2) 启动前端
 ```bash
@@ -49,20 +35,87 @@ npm run dev
 
 浏览器访问：`http://localhost:5173`
 
-## API 一览
-- `POST /checkins/today`：今日打卡（幂等，已存在则更新）
+## 局域网手机访问（无需改 IP）
+前端已改为 `/api` 代理，后端走 `localhost:8000`，无需每次改 `.env.local`。
+
+1) 启动后端（同上）
+2) 启动前端并自动打印手机地址/二维码：
+```bash
+cd frontend
+npm run dev:lan
+```
+3) 手机访问脚本输出的地址，例如：
+```
+http://<你的电脑名>.local:5173
+```
+
+如需二维码显示，请先安装：
+```bash
+brew install qrencode
+```
+
+## 外网访问（可选）
+使用 Cloudflare Tunnel：
+```bash
+cloudflared tunnel --url http://localhost:5173
+```
+它会输出一个公网 URL，手机外网可直接访问。
+
+## 配置说明
+- `frontend/.env.local` 默认：`VITE_API_BASE=/api`
+- 后端 CORS 已允许 `*.local:5173` 与局域网 IP
+
+## API 概览
+- `POST /auth/register`：注册（手机号 + 密码 + sms_code=123456）
+- `POST /auth/login`：登录
+- `POST /auth/refresh`：刷新 token
+- `POST /auth/logout`：退出
+- `GET /me`：获取个人信息
+- `PUT /me/profile`：更新个人信息
+- `GET /me/contacts`：获取联系人
+- `PUT /me/contacts`：更新联系人
+- `POST /checkins/today`：今日打卡（幂等）
 - `GET /checkins/today`：获取今日打卡
-- `GET /checkins?from=&to=`：按日期区间查询
-- `GET /checkins/stats`：最近 30 天统计
+- `GET /checkins?limit=&offset=&order=`：分页查询
+- `GET /checkins/stats`：统计
+- `GET /checkins/summary?days=`：趋势汇总
 
-## 统计口径说明
-- 连续天数：从今天往回连续有打卡的天数
-- 打卡率：最近 30 天打卡天数 / 30
-- 平均睡眠：最近 30 天打卡里有填写睡眠的平均值
+## 数据库迁移（SQLite）
+如果升级后出现 `no such column`，需要执行迁移或重建数据库：
 
-## 开发说明
-- 本项目为本地单用户 MVP，不包含登录/鉴权。
-- 后端默认 CORS 放行 `http://localhost:5173`。
+### 方式 A：保留数据（执行 SQL 迁移）
+停止后端后执行：
+```bash
+sqlite3 backend/checkins.db <<'SQL'
+ALTER TABLE users ADD COLUMN nickname TEXT;
+ALTER TABLE users ADD COLUMN avatar_url TEXT;
+ALTER TABLE users ADD COLUMN wechat TEXT;
+ALTER TABLE users ADD COLUMN email TEXT;
+ALTER TABLE users ADD COLUMN alarm_hours INTEGER DEFAULT 24;
+ALTER TABLE users ADD COLUMN estate_note TEXT;
+ALTER TABLE users ADD COLUMN last_checkin_at DATETIME;
+
+CREATE TABLE IF NOT EXISTS contacts (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  name TEXT NOT NULL,
+  relation TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  wechat TEXT,
+  email TEXT,
+  note TEXT,
+  avatar_url TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+SQL
+```
+
+### 方式 B：不保留数据（删库重建）
+```bash
+rm -f backend/checkins.db
+```
 
 ## License
 MIT

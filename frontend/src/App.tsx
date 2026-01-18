@@ -19,6 +19,9 @@ export default function App() {
       try {
         const me = await getMe();
         setUserPhone(me.phone);
+        window.dispatchEvent(
+          new CustomEvent("sileme-alarm-hours", { detail: me.alarm_hours })
+        );
       } catch {
         setUserPhone(null);
       } finally {
@@ -32,6 +35,9 @@ export default function App() {
   async function handleLoginSuccess() {
     const me = await getMe();
     setUserPhone(me.phone);
+    window.dispatchEvent(
+      new CustomEvent("sileme-alarm-hours", { detail: me.alarm_hours })
+    );
     setPage("home");
   }
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "bash scripts/dev-lan.sh",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },

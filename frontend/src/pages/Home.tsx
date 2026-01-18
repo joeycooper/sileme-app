@@ -3,6 +3,7 @@ import {
   Checkin,
   CheckinPayload,
   Stats,
+  getMe,
   getStats,
   getTodayCheckin,
   upsertToday
@@ -29,6 +30,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
   const [lastCheckinTime, setLastCheckinTime] = useState<string | null>(null);
   const [lastCheckinTs, setLastCheckinTs] = useState<number | null>(null);
   const [countdown, setCountdown] = useState("24:00:00");
+  const [alarmHours, setAlarmHours] = useState<number>(24);
   const noticeTimer = useRef<number | null>(null);
   const lastCheckinTsRef = useRef<number | null>(null);
 
@@ -39,6 +41,9 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
       setToday(null);
       setStats(null);
       setLastCheckinTime(null);
+      const now = Date.now();
+      lastCheckinTsRef.current = now;
+      setLastCheckinTs(now);
     }
     return () => {
       if (noticeTimer.current) {
@@ -47,20 +52,26 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
     };
   }, [isAuthed]);
 
-  function getAlarmHours() {
-    const raw = localStorage.getItem("sileme_alarm_hours");
-    const hours = raw ? Number(raw) : 24;
-    if (Number.isNaN(hours) || hours < 1) return 24;
-    return Math.min(hours, 72);
-  }
+  useEffect(() => {
+    function handleAlarmChange(event: Event) {
+      const custom = event as CustomEvent<number>;
+      if (typeof custom.detail === "number") {
+        setAlarmHours(custom.detail);
+      }
+    }
+
+    window.addEventListener("sileme-alarm-hours", handleAlarmChange);
+    return () => {
+      window.removeEventListener("sileme-alarm-hours", handleAlarmChange);
+    };
+  }, []);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
       const ts = lastCheckinTsRef.current;
-      const totalMs = getAlarmHours() * 60 * 60 * 1000;
+      const totalMs = alarmHours * 60 * 60 * 1000;
       if (!ts) {
-        const hours = getAlarmHours();
-        setCountdown(`${String(hours).padStart(2, "0")}:00:00`);
+        setCountdown(`${String(alarmHours).padStart(2, "0")}:00:00`);
         return;
       }
       const elapsed = Date.now() - ts;
@@ -83,21 +94,24 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [alarmHours]);
 
   async function refresh() {
     setError(null);
     try {
       const enterTs = Date.now();
-      const [todayRes, statsRes] = await Promise.all([
+      const [todayRes, statsRes, meRes] = await Promise.all([
         getTodayCheckin(),
-        getStats()
+        getStats(),
+        getMe()
       ]);
       setToday(todayRes);
       setStats(statsRes);
+      if (meRes.alarm_hours) {
+        setAlarmHours(meRes.alarm_hours);
+      }
       lastCheckinTsRef.current = enterTs;
       setLastCheckinTs(enterTs);
-      localStorage.setItem("sileme_countdown_ts", String(enterTs));
       if (todayRes) {
         setForm({
           sleep_hours: todayRes.sleep_hours?.toString() ?? "",
@@ -173,7 +187,6 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
       });
       const ts = Date.now();
       localStorage.setItem(`sileme_checkin_time_${saved.date}`, time);
-      localStorage.setItem("sileme_countdown_ts", String(ts));
       setLastCheckinTime(time);
       lastCheckinTsRef.current = ts;
       setLastCheckinTs(ts);

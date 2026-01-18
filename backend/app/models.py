@@ -13,6 +13,13 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), default="Asia/Shanghai", nullable=False)
+    nickname: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    wechat: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    alarm_hours: Mapped[int] = mapped_column(Integer, default=24, nullable=False)
+    estate_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_checkin_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )
@@ -32,6 +39,24 @@ class RefreshToken(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Contact(Base):
+    __tablename__ = "contacts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)  # primary | backup
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    relation: Mapped[str] = mapped_column(String(64), nullable=False)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False)
+    wechat: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
 
 
 class Checkin(Base):

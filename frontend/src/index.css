@@ -24,6 +24,7 @@ body {
     radial-gradient(circle at top right, rgba(217, 119, 70, 0.18), transparent 55%),
     radial-gradient(circle at 15% 20%, rgba(197, 168, 133, 0.35), transparent 50%),
     linear-gradient(135deg, var(--bg) 0%, var(--bg-accent) 100%);
+  overflow-x: hidden;
 }
 
 h1,
@@ -120,10 +121,11 @@ strong {
 }
 
 .login-page {
-  min-height: 80vh;
+  min-height: calc(100vh - 80px);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 12px;
 }
 
 .login-card {
@@ -669,12 +671,12 @@ textarea {
   bottom: -100%;
   transform: translateX(-50%);
   width: min(900px, 100%);
-  max-height: 85vh;
+  max-height: 82vh;
   background: var(--card);
   border-radius: 24px 24px 0 0;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  padding: 16px 18px 24px;
+  padding: 16px 18px calc(24px + env(safe-area-inset-bottom));
   overflow-y: auto;
   transition: bottom 0.25s ease;
   z-index: 30;
@@ -914,7 +916,16 @@ textarea {
   }
 
   #root {
+    padding-top: 12px;
     padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .sheet {
+    max-height: calc(82vh - 72px);
+  }
+
+  .login-card {
+    width: 100%;
   }
 
   .footer {
@@ -925,7 +936,7 @@ textarea {
 
 @media (max-width: 420px) {
   #root {
-    padding: 16px 14px 40px;
+    padding: 10px 12px 40px;
   }
 
   .status {

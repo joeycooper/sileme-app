@@ -38,12 +38,14 @@ def upsert_today(
     if existing:
         for field, value in payload.model_dump().items():
             setattr(existing, field, value)
+        current_user.last_checkin_at = datetime.utcnow()
         db.commit()
         db.refresh(existing)
         return existing
 
     checkin = Checkin(user_id=current_user.id, date=today, **payload.model_dump())
     db.add(checkin)
+    current_user.last_checkin_at = datetime.utcnow()
     db.commit()
     db.refresh(checkin)
     return checkin

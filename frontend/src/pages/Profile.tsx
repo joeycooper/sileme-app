@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { authLogout, getMe } from "../services/api";
+import { authLogout, getContacts, getMe, saveContacts, updateProfile } from "../services/api";
 
 type ProfileForm = {
   avatarUrl: string;
@@ -22,9 +22,6 @@ type Contact = {
 };
 
 const DEFAULT_ALARM_HOURS = "24";
-const PRIMARY_KEY = "sileme_primary_contact_v2";
-const BACKUP_KEY = "sileme_backup_contacts_v2";
-
 function emptyContact(): Contact {
   return {
     id: String(Date.now()),
@@ -66,34 +63,70 @@ export default function Profile() {
       const me = await getMe();
       setPhone(me.phone);
       setTimezone(me.timezone);
+      setForm({
+        avatarUrl: me.avatar_url || "",
+        nickname: me.nickname || "",
+        wechat: me.wechat || "",
+        email: me.email || "",
+        alarmHours: String(me.alarm_hours ?? DEFAULT_ALARM_HOURS),
+        estateNote: me.estate_note || ""
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载失败");
     }
 
-    setForm({
-      avatarUrl: localStorage.getItem("sileme_avatar_url") || "",
-      nickname: localStorage.getItem("sileme_nickname") || "",
-      wechat: localStorage.getItem("sileme_wechat") || "",
-      email: localStorage.getItem("sileme_email") || "",
-      alarmHours: localStorage.getItem("sileme_alarm_hours") || DEFAULT_ALARM_HOURS,
-      estateNote: localStorage.getItem("sileme_estate_note") || ""
-    });
-
-    const primaryRaw = localStorage.getItem(PRIMARY_KEY);
-    const backupsRaw = localStorage.getItem(BACKUP_KEY);
-    setPrimaryContact(primaryRaw ? (JSON.parse(primaryRaw) as Contact) : emptyContact());
-    setBackupContacts(backupsRaw ? (JSON.parse(backupsRaw) as Contact[]) : []);
+    try {
+      const contacts = await getContacts();
+      setPrimaryContact(
+        contacts.primary
+          ? {
+              id: String(contacts.primary.id),
+              name: contacts.primary.name,
+              relation: contacts.primary.relation,
+              phone: contacts.primary.phone,
+              wechat: contacts.primary.wechat || "",
+              email: contacts.primary.email || "",
+              note: contacts.primary.note || "",
+              avatar: contacts.primary.avatar_url || ""
+            }
+          : emptyContact()
+      );
+      setBackupContacts(
+        contacts.backups.map((item) => ({
+          id: String(item.id),
+          name: item.name,
+          relation: item.relation,
+          phone: item.phone,
+          wechat: item.wechat || "",
+          email: item.email || "",
+          note: item.note || "",
+          avatar: item.avatar_url || ""
+        }))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "联系人加载失败");
+    }
   }
 
-  function saveProfileSettings() {
+  async function saveProfileSettings() {
     setError(null);
     const hours = Math.min(Math.max(Number(form.alarmHours || DEFAULT_ALARM_HOURS), 1), 72);
-    localStorage.setItem("sileme_avatar_url", form.avatarUrl.trim());
-    localStorage.setItem("sileme_nickname", form.nickname.trim());
-    localStorage.setItem("sileme_wechat", form.wechat.trim());
-    localStorage.setItem("sileme_email", form.email.trim());
-    localStorage.setItem("sileme_alarm_hours", String(hours));
-    localStorage.setItem("sileme_estate_note", form.estateNote.trim());
+    try {
+      const updated = await updateProfile({
+        nickname: form.nickname.trim(),
+        avatar_url: form.avatarUrl.trim() || null,
+        wechat: form.wechat.trim() || null,
+        email: form.email.trim() || null,
+        alarm_hours: hours,
+        estate_note: form.estateNote.trim() || null
+      });
+      window.dispatchEvent(
+        new CustomEvent("sileme-alarm-hours", { detail: updated.alarm_hours })
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存失败");
+      return;
+    }
     setForm((prev) => ({ ...prev, alarmHours: String(hours) }));
     setNotice("已保存");
     window.setTimeout(() => setNotice(null), 2000);
@@ -125,12 +158,26 @@ export default function Profile() {
 
   function handleProfileAvatarUpload(file: File) {
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const url = typeof reader.result === "string" ? reader.result : "";
       setForm((prev) => ({ ...prev, avatarUrl: url }));
-      localStorage.setItem("sileme_avatar_url", url);
-      setNotice("头像已保存");
-      window.setTimeout(() => setNotice(null), 1500);
+      try {
+        const updated = await updateProfile({
+          nickname: form.nickname.trim(),
+          avatar_url: url,
+          wechat: form.wechat.trim() || null,
+          email: form.email.trim() || null,
+          alarm_hours: Math.min(Math.max(Number(form.alarmHours || DEFAULT_ALARM_HOURS), 1), 72),
+          estate_note: form.estateNote.trim() || null
+        });
+        window.dispatchEvent(
+          new CustomEvent("sileme-alarm-hours", { detail: updated.alarm_hours })
+        );
+        setNotice("头像已保存");
+        window.setTimeout(() => setNotice(null), 1500);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "保存失败");
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -139,7 +186,7 @@ export default function Profile() {
     return contact.name.trim() && contact.relation.trim() && contact.phone.trim();
   }
 
-  function saveContacts() {
+  async function handleSaveContacts() {
     if (!validateContact(primaryContact)) {
       setContactError("首选联系人需填写姓名、关系、手机号");
       return;
@@ -149,12 +196,34 @@ export default function Profile() {
       setContactError("备选联系人需填写姓名、关系、手机号");
       return;
     }
-    localStorage.setItem(PRIMARY_KEY, JSON.stringify(primaryContact));
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(backupContacts));
-    setContactError(null);
-    setNotice("联系人已保存");
-    window.setTimeout(() => setNotice(null), 2000);
-    setSheetOpen(false);
+    try {
+      await saveContacts({
+        primary: {
+          name: primaryContact.name.trim(),
+          relation: primaryContact.relation.trim(),
+          phone: primaryContact.phone.trim(),
+          wechat: primaryContact.wechat || null,
+          email: primaryContact.email || null,
+          note: primaryContact.note || null,
+          avatar_url: primaryContact.avatar || null
+        },
+        backups: backupContacts.map((contact) => ({
+          name: contact.name.trim(),
+          relation: contact.relation.trim(),
+          phone: contact.phone.trim(),
+          wechat: contact.wechat || null,
+          email: contact.email || null,
+          note: contact.note || null,
+          avatar_url: contact.avatar || null
+        }))
+      });
+      setContactError(null);
+      setNotice("联系人已保存");
+      window.setTimeout(() => setNotice(null), 2000);
+      setSheetOpen(false);
+    } catch (err) {
+      setContactError(err instanceof Error ? err.message : "保存失败");
+    }
   }
 
   async function handleLogout() {
@@ -539,7 +608,7 @@ export default function Profile() {
         </div>
 
         <div className="sheet-actions">
-          <button className="primary" type="button" onClick={saveContacts}>
+          <button className="primary" type="button" onClick={handleSaveContacts}>
             保存联系人
           </button>
         </div>
