@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Checkin,
   CheckinPayload,
@@ -21,9 +21,27 @@ export default function Home() {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimer = useRef<number | null>(null);
+
+  function setNoticeWithAutoClear(message: string) {
+    setNotice(message);
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+    }
+    noticeTimer.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimer.current = null;
+    }, 2500);
+  }
 
   useEffect(() => {
     void refresh();
+    return () => {
+      if (noticeTimer.current) {
+        window.clearTimeout(noticeTimer.current);
+      }
+    };
   }, []);
 
   async function refresh() {
@@ -42,6 +60,11 @@ export default function Home() {
           mood: todayRes.mood?.toString() ?? "",
           note: todayRes.note ?? ""
         });
+        const lastNoticeDate = localStorage.getItem("sileme_notice_date");
+        if (lastNoticeDate !== todayRes.date) {
+          setNoticeWithAutoClear("打卡成功");
+          localStorage.setItem("sileme_notice_date", todayRes.date);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载失败");
@@ -58,6 +81,7 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const wasCheckedIn = Boolean(today);
     const payload: CheckinPayload = {
       alive: true,
       sleep_hours: toNumberOrNull(form.sleep_hours),
@@ -71,6 +95,12 @@ export default function Home() {
       setToday(saved);
       const statsRes = await getStats();
       setStats(statsRes);
+      if (wasCheckedIn) {
+        setNoticeWithAutoClear("更新打卡成功");
+      } else {
+        setNoticeWithAutoClear("打卡成功");
+      }
+      localStorage.setItem("sileme_notice_date", saved.date);
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败");
     } finally {
@@ -148,6 +178,7 @@ export default function Home() {
             {loading ? "提交中..." : "我还活着 ✅"}
           </button>
 
+          {notice ? <p className="notice">{notice}</p> : null}
           {error ? <p className="error">{error}</p> : null}
         </form>
       </section>

@@ -1,7 +1,40 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+
+class UserCreate(BaseModel):
+    phone: str = Field(pattern=r"^1[3-9]\d{9}$")
+    password: str = Field(min_length=8, max_length=72)
+    timezone: str = "Asia/Shanghai"
+
+
+class UserOut(BaseModel):
+    id: int
+    phone: str
+    timezone: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LoginRequest(BaseModel):
+    phone: str = Field(pattern=r"^1[3-9]\d{9}$")
+    password: str = Field(min_length=8, max_length=72)
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    access_expires_in: int
+    refresh_expires_in: int
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 
 class CheckinBase(BaseModel):
