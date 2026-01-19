@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import Base, engine
-from .routers import auth, checkins
+from .routers import auth, checkins, social
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +30,7 @@ app.add_middleware(
 
 app.include_router(checkins.router)
 app.include_router(auth.router)
+app.include_router(social.router)
 
 
 @app.get("/")

@@ -146,3 +146,53 @@ class SummaryOut(BaseModel):
     avg_energy: float
     avg_mood: float
     items: list[DailySummary]
+
+
+class FriendRequest(BaseModel):
+    phone: str = Field(pattern=r"^1[3-9]\d{9}$")
+    message: str | None = Field(default=None, max_length=140)
+
+
+class FriendAccept(BaseModel):
+    friend_id: int
+
+
+class FriendPermissionUpdate(BaseModel):
+    can_view_detail: bool
+    can_remind: bool
+
+
+class FriendPermissionOut(BaseModel):
+    can_view_detail: bool
+    can_remind: bool
+
+
+class FriendOut(BaseModel):
+    id: int
+    nickname: str | None = None
+    avatar_url: str | None = None
+    status: str
+    today_checked_in: bool
+    streak_days: int
+
+
+class FriendDetailOut(BaseModel):
+    id: int
+    phone: str
+    nickname: str | None = None
+    avatar_url: str | None = None
+    status: str
+    today_checked_in: bool
+    streak_days: int
+    last_checkin_at: datetime | None = None
+    permission: FriendPermissionOut
+
+
+class EncourageRequest(BaseModel):
+    emoji: str = Field(min_length=1, max_length=16)
+    message: str | None = Field(default=None, max_length=140)
+
+
+class RemindOut(BaseModel):
+    sent: bool
+    limited: bool

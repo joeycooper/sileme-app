@@ -105,6 +105,78 @@ cloudflared tunnel --url http://localhost:5173
 ## 数据库迁移（SQLite）
 如果升级后出现 `no such column`，需要执行迁移或重建数据库：
 
+### 社交功能新增表（执行 SQL 迁移）
+停止后端后执行：
+```bash
+sqlite3 backend/checkins.db <<'SQL'
+CREATE TABLE IF NOT EXISTS friendships (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  blocked_by INTEGER,
+  message TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(friend_id) REFERENCES users(id),
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE TABLE IF NOT EXISTS friend_settings (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  can_view_detail BOOLEAN NOT NULL DEFAULT 0,
+  can_remind BOOLEAN NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(friend_id) REFERENCES users(id),
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY,
+  from_user_id INTEGER NOT NULL,
+  to_user_id INTEGER NOT NULL,
+  date DATE NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(from_user_id) REFERENCES users(id),
+  FOREIGN KEY(to_user_id) REFERENCES users(id),
+  UNIQUE(from_user_id, to_user_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS encouragements (
+  id INTEGER PRIMARY KEY,
+  from_user_id INTEGER NOT NULL,
+  to_user_id INTEGER NOT NULL,
+  checkin_date DATE NOT NULL,
+  emoji TEXT NOT NULL,
+  message TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(from_user_id) REFERENCES users(id),
+  FOREIGN KEY(to_user_id) REFERENCES users(id)
+);
+SQL
+```
+
+也可以直接执行迁移文件：
+```bash
+sqlite3 backend/checkins.db < backend/migrations/social.sql
+```
+
+分步执行（按顺序）：
+```bash
+sqlite3 backend/checkins.db < backend/migrations/social/001_friendships.sql
+sqlite3 backend/checkins.db < backend/migrations/social/002_friend_settings.sql
+sqlite3 backend/checkins.db < backend/migrations/social/003_reminders.sql
+sqlite3 backend/checkins.db < backend/migrations/social/004_encouragements.sql
+```
+
+回滚（删除社交相关表）：
+```bash
+sqlite3 backend/checkins.db < backend/migrations/social/rollback.sql
+```
+
 ### 方式 A：保留数据（执行 SQL 迁移）
 停止后端后执行：
 ```bash

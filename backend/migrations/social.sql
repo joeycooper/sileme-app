@@ -1,0 +1,64 @@
+-- Social features migration (SQLite) - full
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  blocked_by INTEGER,
+  message TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(friend_id) REFERENCES users(id),
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_friendships_user_id ON friendships(user_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_friend_id ON friendships(friend_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_status ON friendships(status);
+
+CREATE TABLE IF NOT EXISTS friend_settings (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  can_view_detail BOOLEAN NOT NULL DEFAULT 0,
+  can_remind BOOLEAN NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(friend_id) REFERENCES users(id),
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_friend_settings_user_id ON friend_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_friend_settings_friend_id ON friend_settings(friend_id);
+
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY,
+  from_user_id INTEGER NOT NULL,
+  to_user_id INTEGER NOT NULL,
+  date DATE NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(from_user_id) REFERENCES users(id),
+  FOREIGN KEY(to_user_id) REFERENCES users(id),
+  UNIQUE(from_user_id, to_user_id, date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reminders_from_user_id ON reminders(from_user_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_to_user_id ON reminders(to_user_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(date);
+
+CREATE TABLE IF NOT EXISTS encouragements (
+  id INTEGER PRIMARY KEY,
+  from_user_id INTEGER NOT NULL,
+  to_user_id INTEGER NOT NULL,
+  checkin_date DATE NOT NULL,
+  emoji TEXT NOT NULL,
+  message TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(from_user_id) REFERENCES users(id),
+  FOREIGN KEY(to_user_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_encouragements_from_user_id ON encouragements(from_user_id);
+CREATE INDEX IF NOT EXISTS idx_encouragements_to_user_id ON encouragements(to_user_id);
+CREATE INDEX IF NOT EXISTS idx_encouragements_checkin_date ON encouragements(checkin_date);

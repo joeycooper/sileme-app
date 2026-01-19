@@ -71,3 +71,59 @@ class Checkin(Base):
     energy: Mapped[int | None] = mapped_column(Integer, nullable=True)
     mood: Mapped[int | None] = mapped_column(Integer, nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class Friendship(Base):
+    __tablename__ = "friendships"
+    __table_args__ = (UniqueConstraint("user_id", "friend_id", name="uq_friendships_pair"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    friend_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)  # pending | accepted | blocked
+    blocked_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    message: Mapped[str | None] = mapped_column(String(140), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+
+
+class FriendSetting(Base):
+    __tablename__ = "friend_settings"
+    __table_args__ = (UniqueConstraint("user_id", "friend_id", name="uq_friend_settings_pair"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    friend_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    can_view_detail: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    can_remind: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+
+
+class Reminder(Base):
+    __tablename__ = "reminders"
+    __table_args__ = (UniqueConstraint("from_user_id", "to_user_id", "date", name="uq_reminder_day"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    from_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    to_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+
+
+class Encouragement(Base):
+    __tablename__ = "encouragements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    from_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    to_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    checkin_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    emoji: Mapped[str] = mapped_column(String(16), nullable=False)
+    message: Mapped[str | None] = mapped_column(String(140), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
