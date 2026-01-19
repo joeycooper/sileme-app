@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+import os
 from typing import Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -12,6 +13,7 @@ from ..schemas import CheckinCreate, CheckinOut, StatsOut, SummaryOut, DailySumm
 from ..security import get_current_user
 
 router = APIRouter(prefix="/checkins", tags=["checkins"])
+EDIT_WINDOW_DAYS = int(os.getenv("CHECKIN_EDIT_WINDOW_DAYS", "7"))
 
 
 def get_user_local_date(user: User) -> date:
@@ -49,6 +51,36 @@ def upsert_today(
     db.commit()
     db.refresh(checkin)
     return checkin
+
+
+@router.put("/{checkin_date}", response_model=CheckinOut)
+def update_checkin(
+    checkin_date: date,
+    payload: CheckinCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    today = get_user_local_date(current_user)
+    if checkin_date > today:
+        raise HTTPException(status_code=400, detail="Cannot edit future check-ins")
+    if (today - checkin_date).days >= EDIT_WINDOW_DAYS:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Only last {EDIT_WINDOW_DAYS} days can be edited",
+        )
+    existing = db.scalar(
+        select(Checkin).where(
+            Checkin.date == checkin_date,
+            Checkin.user_id == current_user.id,
+        )
+    )
+    if not existing:
+        raise HTTPException(status_code=404, detail="Check-in not found")
+    for field, value in payload.model_dump().items():
+        setattr(existing, field, value)
+    db.commit()
+    db.refresh(existing)
+    return existing
 
 
 @router.get("/today", response_model=CheckinOut)
@@ -134,7 +166,7 @@ def get_stats(
 
 @router.get("/summary", response_model=SummaryOut)
 def get_summary(
-    days: int = Query(default=14, ge=1, le=120),
+    days: int = Query(default=14, ge=1, le=180),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

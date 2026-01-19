@@ -258,6 +258,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
                 placeholder="7"
                 value={form.sleep_hours}
                 onChange={(e) => setForm({ ...form, sleep_hours: e.target.value })}
+                name="sleep_hours"
               />
             </label>
             <label className="compact-field">
@@ -280,6 +281,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
               placeholder="今天的我..."
               value={form.note}
               onChange={(e) => setForm({ ...form, note: e.target.value })}
+              name="note"
             />
           </label>
         </div>

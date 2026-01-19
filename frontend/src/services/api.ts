@@ -354,6 +354,15 @@ export async function upsertToday(payload: CheckinPayload): Promise<Checkin> {
   return handleJson<Checkin>(res);
 }
 
+export async function updateCheckin(date: string, payload: CheckinPayload): Promise<Checkin> {
+  const res = await apiFetch(`${API_BASE}/checkins/${date}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<Checkin>(res);
+}
+
 export async function getStats(): Promise<Stats> {
   const res = await apiFetch(`${API_BASE}/checkins/stats`);
   return handleJson<Stats>(res);

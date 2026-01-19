@@ -125,6 +125,7 @@ export default function Login({ onSuccess }: Props) {
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
               inputMode="numeric"
+              name="phone"
               required
             />
             {phoneError ? <span className="field-error">{phoneError}</span> : null}
@@ -137,6 +138,7 @@ export default function Login({ onSuccess }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={isRegister ? "new-password" : "current-password"}
+              name="password"
               required
             />
             {passwordError ? <span className="field-error">{passwordError}</span> : null}
@@ -150,6 +152,7 @@ export default function Login({ onSuccess }: Props) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"
+                  name="confirm_password"
                   required
                 />
               {confirmError ? <span className="field-error">{confirmError}</span> : null}
@@ -165,6 +168,7 @@ export default function Login({ onSuccess }: Props) {
                   value={smsCode}
                   onChange={(e) => setSmsCode(e.target.value)}
                   inputMode="numeric"
+                  name="sms_code"
                   required
                 />
                 <button

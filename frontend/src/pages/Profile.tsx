@@ -244,6 +244,7 @@ export default function Profile() {
             <input
               type="file"
               accept="image/*"
+              name="avatar"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleProfileAvatarUpload(file);
@@ -325,6 +326,7 @@ export default function Profile() {
                   placeholder="设置昵称"
                   value={form.nickname}
                   onChange={(e) => setForm({ ...form, nickname: e.target.value })}
+                  name="nickname"
                 />
               </label>
               <label>
@@ -334,6 +336,7 @@ export default function Profile() {
                   placeholder="填写你的微信号"
                   value={form.wechat}
                   onChange={(e) => setForm({ ...form, wechat: e.target.value })}
+                  name="wechat"
                 />
               </label>
               <label>
@@ -343,6 +346,7 @@ export default function Profile() {
                   placeholder="you@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  name="email"
                 />
               </label>
             </div>
@@ -359,6 +363,7 @@ export default function Profile() {
                   max="72"
                   value={form.alarmHours}
                   onChange={(e) => setForm({ ...form, alarmHours: e.target.value })}
+                  name="alarm_hours"
                 />
               </label>
             </div>
@@ -374,6 +379,7 @@ export default function Profile() {
                   placeholder="例如：遗产分配给家人..."
                   value={form.estateNote}
                   onChange={(e) => setForm({ ...form, estateNote: e.target.value })}
+                  name="estate_note"
                 />
               </label>
             </div>
@@ -411,6 +417,7 @@ export default function Profile() {
                 <input
                   type="file"
                   accept="image/*"
+                  name="primary_avatar"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) handleAvatarUpload(file, "primary");
@@ -427,6 +434,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, name: e.target.value }))
                   }
+                  name="primary_name"
                   required
                 />
               </label>
@@ -438,6 +446,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, relation: e.target.value }))
                   }
+                  name="primary_relation"
                   required
                 />
               </label>
@@ -449,6 +458,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, phone: e.target.value }))
                   }
+                  name="primary_phone"
                   required
                 />
               </label>
@@ -460,6 +470,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, wechat: e.target.value }))
                   }
+                  name="primary_wechat"
                 />
               </label>
               <label>
@@ -470,6 +481,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, email: e.target.value }))
                   }
+                  name="primary_email"
                 />
               </label>
               <label className="span-2">
@@ -480,6 +492,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setPrimaryContact((prev) => ({ ...prev, note: e.target.value }))
                   }
+                  name="primary_note"
                 />
               </label>
             </div>
@@ -500,6 +513,7 @@ export default function Profile() {
                   <input
                     type="file"
                     accept="image/*"
+                    name={`backup_avatar_${contact.id}`}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleAvatarUpload(file, "backup", contact.id);
@@ -520,6 +534,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_name_${contact.id}`}
                     required
                   />
                 </label>
@@ -537,6 +552,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_relation_${contact.id}`}
                     required
                   />
                 </label>
@@ -552,6 +568,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_phone_${contact.id}`}
                     required
                   />
                 </label>
@@ -567,6 +584,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_wechat_${contact.id}`}
                   />
                 </label>
                 <label>
@@ -581,6 +599,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_email_${contact.id}`}
                   />
                 </label>
                 <label className="span-2">
@@ -595,6 +614,7 @@ export default function Profile() {
                         )
                       )
                     }
+                    name={`backup_note_${contact.id}`}
                   />
                 </label>
               </div>
