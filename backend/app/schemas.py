@@ -174,6 +174,7 @@ class FriendOut(BaseModel):
     status: str
     today_checked_in: bool
     streak_days: int
+    message: str | None = None
 
 
 class FriendDetailOut(BaseModel):
@@ -196,3 +197,22 @@ class EncourageRequest(BaseModel):
 class RemindOut(BaseModel):
     sent: bool
     limited: bool
+
+
+class NotificationOut(BaseModel):
+    id: int
+    kind: str
+    message: str
+    from_user_id: int | None
+    from_user_name: str | None = None
+    from_user_avatar: str | None = None
+    created_at: datetime
+    read_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class NotificationReadOut(BaseModel):
+    id: int
+    read_at: datetime

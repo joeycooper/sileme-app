@@ -10,12 +10,15 @@
 - 登录/注册（手机号 + 密码 + Mock 验证码）
 - 个人设置：昵称/头像/微信/邮箱、自动警报时间、遗产说明
 - 紧急联系人：首选 1 个、备选多个（头像可上传）
+- 社交：好友添加、提醒/鼓励、站内通知
 
 ## 新增功能说明
 - 趋势图：支持 14/30/90 天切换，展示睡眠/精力/心情曲线
+- 趋势图：打卡数据不足 5 天时不展示曲线
 - 热力图：最近 180 天打卡日历热力图，按月标记
 - 最近记录：默认展示最近 10 条，按钮加载更多
 - 详情与编辑：点击记录展开详情，可编辑最近 N 天（默认 7 天）
+- 社交：点击「添加好友」弹出表单，站内通知按好友折叠
 
 ## PRD 文档
 - 合并版：`PRD-social.md`
@@ -101,6 +104,17 @@ cloudflared tunnel --url http://localhost:5173
 - `GET /checkins?limit=&offset=&order=`：分页查询
 - `GET /checkins/stats`：统计
 - `GET /checkins/summary?days=`：趋势/热力图汇总（最多 180 天）
+- `POST /friends/request`：发送好友请求
+- `POST /friends/accept`：通过好友请求
+- `GET /friends`：好友列表
+- `GET /friends/{id}`：好友详情
+- `GET /friends/{id}/permission`：获取好友权限
+- `POST /friends/{id}/permission`：更新好友权限
+- `POST /friends/{id}/remind`：提醒打卡
+- `POST /friends/{id}/encourage`：发送鼓励
+- `GET /notifications?limit=`：站内通知列表
+- `POST /notifications/{id}/read`：标记已读
+- `POST /notifications/read-all`：全部已读
 
 ## 数据库迁移（SQLite）
 如果升级后出现 `no such column`，需要执行迁移或重建数据库：
@@ -170,6 +184,7 @@ sqlite3 backend/checkins.db < backend/migrations/social/001_friendships.sql
 sqlite3 backend/checkins.db < backend/migrations/social/002_friend_settings.sql
 sqlite3 backend/checkins.db < backend/migrations/social/003_reminders.sql
 sqlite3 backend/checkins.db < backend/migrations/social/004_encouragements.sql
+sqlite3 backend/checkins.db < backend/migrations/social/005_notifications.sql
 ```
 
 回滚（删除社交相关表）：

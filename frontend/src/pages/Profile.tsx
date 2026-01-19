@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authLogout, getContacts, getMe, saveContacts, updateProfile } from "../services/api";
 import { IconLogout, IconNote, IconPhone, IconTimer, IconUser } from "../components/icons";
 
@@ -47,13 +47,24 @@ export default function Profile() {
     alarmHours: DEFAULT_ALARM_HOURS,
     estateNote: ""
   });
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [primaryContact, setPrimaryContact] = useState<Contact>(emptyContact());
   const [backupContacts, setBackupContacts] = useState<Contact[]>([]);
   const [contactError, setContactError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<"profile" | "alarm" | "estate" | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null);
+  const [cropScale, setCropScale] = useState(1);
+  const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 });
+  const [cropBaseScale, setCropBaseScale] = useState(1);
+  const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
+  const [cropSaving, setCropSaving] = useState(false);
+  const cropPreviewRef = useRef<HTMLDivElement | null>(null);
+  const cropImageRef = useRef<HTMLImageElement | null>(null);
+  const dragState = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+  const PREVIEW_SIZE = 240;
+  const OUTPUT_SIZE = 256;
 
   useEffect(() => {
     void loadProfile();
@@ -129,8 +140,7 @@ export default function Profile() {
       return;
     }
     setForm((prev) => ({ ...prev, alarmHours: String(hours) }));
-    setNotice("已保存");
-    window.setTimeout(() => setNotice(null), 2000);
+    setActivePanel(null);
   }
 
   function openContacts() {
@@ -159,28 +169,84 @@ export default function Profile() {
 
   function handleProfileAvatarUpload(file: File) {
     const reader = new FileReader();
-    reader.onload = async () => {
+    reader.onload = () => {
       const url = typeof reader.result === "string" ? reader.result : "";
-      setForm((prev) => ({ ...prev, avatarUrl: url }));
-      try {
-        const updated = await updateProfile({
-          nickname: form.nickname.trim(),
-          avatar_url: url,
-          wechat: form.wechat.trim() || null,
-          email: form.email.trim() || null,
-          alarm_hours: Math.min(Math.max(Number(form.alarmHours || DEFAULT_ALARM_HOURS), 1), 72),
-          estate_note: form.estateNote.trim() || null
-        });
-        window.dispatchEvent(
-          new CustomEvent("sileme-alarm-hours", { detail: updated.alarm_hours })
-        );
-        setNotice("头像已保存");
-        window.setTimeout(() => setNotice(null), 1500);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "保存失败");
-      }
+      const img = new Image();
+      img.onload = () => {
+        const baseScale = PREVIEW_SIZE / Math.min(img.width, img.height);
+        setCropImage(img);
+        setCropImageUrl(url);
+        setCropBaseScale(baseScale);
+        setCropScale(1);
+        setCropOffset({ x: 0, y: 0 });
+        setCropOpen(true);
+      };
+      img.src = url;
     };
     reader.readAsDataURL(file);
+  }
+
+  function clampOffset(next: { x: number; y: number }, scaleValue: number) {
+    if (!cropImage) return next;
+    const scale = cropBaseScale * scaleValue;
+    const maxX = Math.max(0, (cropImage.width * scale - PREVIEW_SIZE) / 2);
+    const maxY = Math.max(0, (cropImage.height * scale - PREVIEW_SIZE) / 2);
+    return {
+      x: Math.min(maxX, Math.max(-maxX, next.x)),
+      y: Math.min(maxY, Math.max(-maxY, next.y))
+    };
+  }
+
+  async function handleCropSave() {
+    if (!cropImage || !cropImageUrl) return;
+    setCropSaving(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = OUTPUT_SIZE;
+      canvas.height = OUTPUT_SIZE;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas unavailable");
+      const previewEl = cropPreviewRef.current;
+      const imageEl = cropImageRef.current;
+      if (!previewEl || !imageEl) throw new Error("Crop preview unavailable");
+      const previewRect = previewEl.getBoundingClientRect();
+      const imageRect = imageEl.getBoundingClientRect();
+      const naturalWidth = cropImage.naturalWidth || cropImage.width;
+      const naturalHeight = cropImage.naturalHeight || cropImage.height;
+      const scaleX = naturalWidth / imageRect.width;
+      const scaleY = naturalHeight / imageRect.height;
+      let sx = (previewRect.left - imageRect.left) * scaleX;
+      let sy = (previewRect.top - imageRect.top) * scaleY;
+      let sWidth = previewRect.width * scaleX;
+      let sHeight = previewRect.height * scaleY;
+      sx = Math.min(Math.max(0, sx), naturalWidth - sWidth);
+      sy = Math.min(Math.max(0, sy), naturalHeight - sHeight);
+      ctx.drawImage(cropImage, sx, sy, sWidth, sHeight, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+      const url = canvas.toDataURL("image/jpeg", 0.9);
+      setForm((prev) => ({ ...prev, avatarUrl: url }));
+      const updated = await updateProfile({
+        nickname: form.nickname.trim(),
+        avatar_url: url,
+        wechat: form.wechat.trim() || null,
+        email: form.email.trim() || null,
+        alarm_hours: Math.min(Math.max(Number(form.alarmHours || DEFAULT_ALARM_HOURS), 1), 72),
+        estate_note: form.estateNote.trim() || null
+      });
+      window.dispatchEvent(
+        new CustomEvent("sileme-alarm-hours", { detail: updated.alarm_hours })
+      );
+      setCropOpen(false);
+      setCropImageUrl(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存失败");
+    } finally {
+      setCropSaving(false);
+    }
+  }
+
+  function handleCropCancel() {
+    setCropOpen(false);
+    setCropImageUrl(null);
   }
 
   function validateContact(contact: Contact) {
@@ -219,8 +285,6 @@ export default function Profile() {
         }))
       });
       setContactError(null);
-      setNotice("联系人已保存");
-      window.setTimeout(() => setNotice(null), 2000);
       setSheetOpen(false);
     } catch (err) {
       setContactError(err instanceof Error ? err.message : "保存失败");
@@ -235,7 +299,6 @@ export default function Profile() {
   return (
     <div className="page">
       {error ? <p className="error">{error}</p> : null}
-      {notice ? <p className="notice">{notice}</p> : null}
 
       <section className="card profile-hero">
         <div className="profile-hero-content">
@@ -644,6 +707,80 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {cropOpen && cropImageUrl ? (
+        <div className="crop-overlay" role="dialog" aria-modal="true">
+          <div className="crop-panel">
+            <div className="crop-header">
+              <h3>裁剪头像</h3>
+              <button className="link" type="button" onClick={handleCropCancel}>
+                关闭
+              </button>
+            </div>
+            <div className="crop-preview" ref={cropPreviewRef}>
+              {cropImage ? (
+                <img
+                  src={cropImageUrl}
+                  alt="头像预览"
+                  className="crop-image"
+                  ref={cropImageRef}
+                  style={{
+                    width: cropImage.width * cropBaseScale,
+                    height: cropImage.height * cropBaseScale,
+                    transform: `translate(${cropOffset.x}px, ${cropOffset.y}px) scale(${cropScale})`
+                  }}
+                  onPointerDown={(event) => {
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    dragState.current = {
+                      x: event.clientX,
+                      y: event.clientY,
+                      ox: cropOffset.x,
+                      oy: cropOffset.y
+                    };
+                  }}
+                  onPointerMove={(event) => {
+                    if (!dragState.current) return;
+                    const dx = event.clientX - dragState.current.x;
+                    const dy = event.clientY - dragState.current.y;
+                    const next = clampOffset(
+                      { x: dragState.current.ox + dx, y: dragState.current.oy + dy },
+                      cropScale
+                    );
+                    setCropOffset(next);
+                  }}
+                  onPointerUp={(event) => {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                    dragState.current = null;
+                  }}
+                />
+              ) : null}
+            </div>
+            <div className="crop-controls">
+              <span>缩放</span>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={cropScale}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  setCropScale(value);
+                  setCropOffset((prev) => clampOffset(prev, value));
+                }}
+              />
+            </div>
+            <div className="crop-actions">
+              <button className="secondary" type="button" onClick={handleCropCancel}>
+                取消
+              </button>
+              <button className="primary" type="button" onClick={handleCropSave} disabled={cropSaving}>
+                {cropSaving ? "保存中..." : "保存头像"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

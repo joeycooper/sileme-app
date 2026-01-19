@@ -3,12 +3,13 @@ import Home from "./pages/Home";
 import History from "./pages/History";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Social from "./pages/Social";
 import { getMe, hasRefreshToken } from "./services/api";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [userPhone, setUserPhone] = useState<string | null>(null);
-  const [page, setPage] = useState<"home" | "history" | "profile">("home");
+  const [page, setPage] = useState<"home" | "history" | "profile" | "social">("home");
 
   useEffect(() => {
     async function init() {
@@ -64,6 +65,13 @@ export default function App() {
             历史
           </button>
           <button
+            className={`tab ${page === "social" ? "active" : ""}`}
+            type="button"
+            onClick={() => setPage("social")}
+          >
+            社交
+          </button>
+          <button
             className={`tab ${page === "profile" ? "active" : ""}`}
             type="button"
             onClick={() => setPage("profile")}
@@ -76,6 +84,8 @@ export default function App() {
         <Home isAuthed={Boolean(userPhone)} onRequireLogin={() => setPage("profile")} />
       ) : page === "history" ? (
         userPhone ? <History /> : <Login onSuccess={handleLoginSuccess} />
+      ) : page === "social" ? (
+        userPhone ? <Social /> : <Login onSuccess={handleLoginSuccess} />
       ) : userPhone ? (
         <Profile />
       ) : (
@@ -95,6 +105,13 @@ export default function App() {
           onClick={() => setPage("history")}
         >
           历史
+        </button>
+        <button
+          className={`nav-item ${page === "social" ? "active" : ""}`}
+          type="button"
+          onClick={() => setPage("social")}
+        >
+          社交
         </button>
         <button
           className={`nav-item ${page === "profile" ? "active" : ""}`}

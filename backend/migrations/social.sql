@@ -62,3 +62,18 @@ CREATE TABLE IF NOT EXISTS encouragements (
 CREATE INDEX IF NOT EXISTS idx_encouragements_from_user_id ON encouragements(from_user_id);
 CREATE INDEX IF NOT EXISTS idx_encouragements_to_user_id ON encouragements(to_user_id);
 CREATE INDEX IF NOT EXISTS idx_encouragements_checkin_date ON encouragements(checkin_date);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  from_user_id INTEGER,
+  kind TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  read_at DATETIME,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(from_user_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);

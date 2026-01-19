@@ -118,6 +118,57 @@ export type ContactsOut = {
   backups: ContactOut[];
 };
 
+export type Friend = {
+  id: number;
+  nickname?: string | null;
+  avatar_url?: string | null;
+  status: string;
+  today_checked_in: boolean;
+  streak_days: number;
+  message?: string | null;
+};
+
+export type FriendPermission = {
+  can_view_detail: boolean;
+  can_remind: boolean;
+};
+
+export type FriendDetail = Friend & {
+  phone: string;
+  last_checkin_at?: string | null;
+  permission: FriendPermission;
+};
+
+export type FriendRequestPayload = {
+  phone: string;
+  message?: string | null;
+};
+
+export type FriendAcceptPayload = {
+  friend_id: number;
+};
+
+export type EncouragePayload = {
+  emoji: string;
+  message?: string | null;
+};
+
+export type RemindResult = {
+  sent: boolean;
+  limited: boolean;
+};
+
+export type Notification = {
+  id: number;
+  kind: string;
+  message: string;
+  from_user_id: number | null;
+  from_user_name?: string | null;
+  from_user_avatar?: string | null;
+  created_at: string;
+  read_at?: string | null;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const STORAGE_KEY = "sileme_auth";
 const DEVICE_KEY = "sileme_device_id";
@@ -199,6 +250,11 @@ function toFriendlyMessage(raw: string): string {
   if (lower.includes("refresh token")) return "登录已过期，请重新登录。";
   if (lower.includes("no check-in for today")) return "今天还没有打卡记录。";
   if (lower.includes("invalid timezone")) return "时区填写不正确，请检查后再试。";
+  if (lower.includes("already friends")) return "已经是好友了。";
+  if (lower.includes("cannot add yourself")) return "不能添加自己为好友。";
+  if (lower.includes("blocked")) return "对方已将你拉黑或无法添加。";
+  if (lower.includes("request not found")) return "请求不存在或已处理。";
+  if (lower.includes("reminders disabled")) return "对方已关闭提醒。";
   if (lower.includes("field required")) return "有必填项未填写，请检查。";
   if (lower.includes("string should match pattern")) return "手机号格式不正确。";
   if (lower.includes("string should have at least")) return "密码至少 8 位。";
@@ -384,4 +440,88 @@ export async function getCheckins(params: {
   if (params.order) search.set("order", params.order);
   const res = await apiFetch(`${API_BASE}/checkins?${search.toString()}`);
   return handleJson<Checkin[]>(res);
+}
+
+export async function getFriends(): Promise<Friend[]> {
+  const res = await apiFetch(`${API_BASE}/friends`);
+  return handleJson<Friend[]>(res);
+}
+
+export async function requestFriend(payload: FriendRequestPayload): Promise<Friend> {
+  const res = await apiFetch(`${API_BASE}/friends/request`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<Friend>(res);
+}
+
+export async function acceptFriend(payload: FriendAcceptPayload): Promise<Friend> {
+  const res = await apiFetch(`${API_BASE}/friends/accept`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<Friend>(res);
+}
+
+export async function getFriendDetail(friendId: number): Promise<FriendDetail> {
+  const res = await apiFetch(`${API_BASE}/friends/${friendId}`);
+  return handleJson<FriendDetail>(res);
+}
+
+export async function updateFriendPermission(
+  friendId: number,
+  payload: FriendPermission
+): Promise<FriendPermission> {
+  const res = await apiFetch(`${API_BASE}/friends/${friendId}/permission`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<FriendPermission>(res);
+}
+
+export async function remindFriend(friendId: number): Promise<RemindResult> {
+  const res = await apiFetch(`${API_BASE}/friends/${friendId}/remind`, {
+    method: "POST"
+  });
+  return handleJson<RemindResult>(res);
+}
+
+export async function encourageFriend(
+  friendId: number,
+  payload: EncouragePayload
+): Promise<{ sent: boolean }> {
+  const res = await apiFetch(`${API_BASE}/friends/${friendId}/encourage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return handleJson<{ sent: boolean }>(res);
+}
+
+export async function getNotifications(params: {
+  limit?: number;
+  unread_only?: boolean;
+}): Promise<Notification[]> {
+  const search = new URLSearchParams();
+  if (params.limit) search.set("limit", String(params.limit));
+  if (params.unread_only) search.set("unread_only", "true");
+  const res = await apiFetch(`${API_BASE}/notifications?${search.toString()}`);
+  return handleJson<Notification[]>(res);
+}
+
+export async function markNotificationRead(notificationId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/notifications/${notificationId}/read`, {
+    method: "POST"
+  });
+  await handleJson(res);
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/notifications/read-all`, {
+    method: "POST"
+  });
+  await handleJson(res);
 }

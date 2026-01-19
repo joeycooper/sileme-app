@@ -286,6 +286,7 @@ export default function History() {
   const showLoading = loading && !mockEnabled;
 
   const filteredItems = displaySummary?.items.filter((item) => item.checked_in) ?? [];
+  const trendReady = filteredItems.length >= 5;
   const listItems = displayListSummary?.items.filter((item) => item.checked_in) ?? [];
   const moodValues = filteredItems
     .map((item) => item.mood)
@@ -479,6 +480,8 @@ export default function History() {
             <span>睡眠</span>
             {showLoading ? (
               <span>加载中...</span>
+            ) : !trendReady ? (
+              <span className="muted">数据不足</span>
             ) : (
               <SparklineBoundary>
                 <Sparkline
@@ -496,6 +499,8 @@ export default function History() {
             <span>精力</span>
             {showLoading ? (
               <span>加载中...</span>
+            ) : !trendReady ? (
+              <span className="muted">数据不足</span>
             ) : (
               <SparklineBoundary>
                 <Sparkline
@@ -511,6 +516,8 @@ export default function History() {
             <span>心情</span>
             {showLoading ? (
               <span>加载中...</span>
+            ) : !trendReady ? (
+              <span className="muted">数据不足</span>
             ) : (
               <SparklineBoundary>
                 <Sparkline values={moodValues} min={1} max={5} className="sparkline-mood" />
@@ -518,20 +525,22 @@ export default function History() {
             )}
           </div>
         </div>
-        <div className="trend-legend">
-          <span>
-            <i className="legend-dot legend-energy" aria-hidden="true" />
-            精力
-          </span>
-          <span>
-            <i className="legend-dot legend-mood" aria-hidden="true" />
-            心情
-          </span>
-          <span>
-            <i className="legend-dot legend-sleep" aria-hidden="true" />
-            睡眠
-          </span>
-        </div>
+        {trendReady ? (
+          <div className="trend-legend">
+            <span>
+              <i className="legend-dot legend-energy" aria-hidden="true" />
+              精力
+            </span>
+            <span>
+              <i className="legend-dot legend-mood" aria-hidden="true" />
+              心情
+            </span>
+            <span>
+              <i className="legend-dot legend-sleep" aria-hidden="true" />
+              睡眠
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <section className="card">

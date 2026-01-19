@@ -6,7 +6,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Checkin, Encouragement, FriendSetting, Friendship, Reminder, User
+from ..models import Checkin, Encouragement, FriendSetting, Friendship, Notification, Reminder, User
 from ..schemas import (
     EncourageRequest,
     FriendAccept,
@@ -92,6 +92,7 @@ def to_friend_out(db: Session, current_user: User, friendship: Friendship, frien
         status=status_label,
         today_checked_in=bool(checked_in),
         streak_days=get_streak_days(db, friend),
+        message=friendship.message,
     )
 
 
@@ -229,7 +230,7 @@ def update_permission(
     current_user: User = Depends(get_current_user),
 ):
     friendship = find_friendship(db, current_user.id, friend_id)
-    if not friendship or friendship.status != "accepted":
+    if not friendship or friendship.status == "blocked":
         raise HTTPException(status_code=404, detail="Friend not found")
     setting = db.scalar(
         select(FriendSetting).where(
@@ -262,7 +263,7 @@ def get_permission(
     current_user: User = Depends(get_current_user),
 ):
     friendship = find_friendship(db, current_user.id, friend_id)
-    if not friendship or friendship.status != "accepted":
+    if not friendship or friendship.status == "blocked":
         raise HTTPException(status_code=404, detail="Friend not found")
     setting = db.scalar(
         select(FriendSetting).where(
@@ -313,6 +314,14 @@ def remind_friend(
         return RemindOut(sent=False, limited=True)
 
     db.add(Reminder(from_user_id=current_user.id, to_user_id=friend_id, date=reminder_date))
+    db.add(
+        Notification(
+            user_id=friend_id,
+            from_user_id=current_user.id,
+            kind="remind",
+            message="提醒你打卡啦",
+        )
+    )
     db.commit()
     return RemindOut(sent=True, limited=False)
 
@@ -339,5 +348,13 @@ def encourage_friend(
         message=payload.message,
     )
     db.add(record)
+    db.add(
+        Notification(
+            user_id=friend_id,
+            from_user_id=current_user.id,
+            kind="encourage",
+            message=f"给你加油 {payload.emoji}",
+        )
+    )
     db.commit()
     return {"sent": True}
