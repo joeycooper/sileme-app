@@ -26,6 +26,10 @@
   - `PRD/04-data-model.md`
   - `PRD/05-apis.md`
   - `PRD/06-metrics.md`
+  - `PRD/07-flow-diagrams.md`
+  - `PRD/08-api-examples.md`
+  - `PRD/09-frontend-wire.md`
+  - `PRD/10-db-details.md`
 
 ## 技术栈
 - 后端：FastAPI + SQLAlchemy + SQLite
