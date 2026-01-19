@@ -17,6 +17,16 @@
 - 最近记录：默认展示最近 10 条，按钮加载更多
 - 详情与编辑：点击记录展开详情，可编辑最近 N 天（默认 7 天）
 
+## PRD 文档
+- 合并版：`PRD-social.md`
+- 拆分版：
+  - `PRD/01-overview.md`
+  - `PRD/02-features.md`
+  - `PRD/03-flows.md`
+  - `PRD/04-data-model.md`
+  - `PRD/05-apis.md`
+  - `PRD/06-metrics.md`
+
 ## 技术栈
 - 后端：FastAPI + SQLAlchemy + SQLite
 - 前端：React + TypeScript + Vite
