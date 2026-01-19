@@ -5,11 +5,17 @@
 ## 功能概览
 - 一键打卡「我还活着」
 - 每天最多一条打卡（按日期唯一，重复提交会更新）
-- 统计概览：连续天数、打卡率、平均睡眠
-- 历史页：最近打卡列表与趋势
+- 统计概览：连续天数、平均睡眠、趋势图
+- 历史页：最近 30 天记录、详情展开与编辑、热力图
 - 登录/注册（手机号 + 密码 + Mock 验证码）
 - 个人设置：昵称/头像/微信/邮箱、自动警报时间、遗产说明
 - 紧急联系人：首选 1 个、备选多个（头像可上传）
+
+## 新增功能说明
+- 趋势图：支持 14/30/90 天切换，展示睡眠/精力/心情曲线
+- 热力图：最近 180 天打卡日历热力图，按月标记
+- 最近记录：默认展示最近 10 条，按钮加载更多
+- 详情与编辑：点击记录展开详情，可编辑最近 N 天（默认 7 天）
 
 ## 技术栈
 - 后端：FastAPI + SQLAlchemy + SQLite
@@ -64,6 +70,7 @@ cloudflared tunnel --url http://localhost:5173
 ## 配置说明
 - `frontend/.env.local` 默认：`VITE_API_BASE=/api`
 - 后端 CORS 已允许 `*.local:5173` 与局域网 IP
+- `CHECKIN_EDIT_WINDOW_DAYS`：历史记录可编辑天数（默认 7）
 
 ## API 概览
 - `POST /auth/register`：注册（手机号 + 密码 + sms_code=123456）
@@ -76,9 +83,10 @@ cloudflared tunnel --url http://localhost:5173
 - `PUT /me/contacts`：更新联系人
 - `POST /checkins/today`：今日打卡（幂等）
 - `GET /checkins/today`：获取今日打卡
+- `PUT /checkins/{date}`：更新某天打卡（受编辑天数限制）
 - `GET /checkins?limit=&offset=&order=`：分页查询
 - `GET /checkins/stats`：统计
-- `GET /checkins/summary?days=`：趋势汇总
+- `GET /checkins/summary?days=`：趋势/热力图汇总（最多 180 天）
 
 ## 数据库迁移（SQLite）
 如果升级后出现 `no such column`，需要执行迁移或重建数据库：
