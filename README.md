@@ -25,21 +25,20 @@
 
 ## PRD 文档
 - 合并版：`PRD-social.md`
-- 拆分版：
-  - `PRD/01-overview.md`
-  - `PRD/02-features.md`
-  - `PRD/03-flows.md`
-  - `PRD/04-data-model.md`
-  - `PRD/05-apis.md`
-  - `PRD/06-metrics.md`
-  - `PRD/07-flow-diagrams.md`
-  - `PRD/08-api-examples.md`
-  - `PRD/09-frontend-wire.md`
-  - `PRD/10-db-details.md`
 
 ## 技术栈
 - 后端：FastAPI + SQLAlchemy + SQLite
 - 前端：React + TypeScript + Vite
+
+## 推荐阅读（新对话/新设备）
+1) `README.md`
+2) `docs/FRONTEND-STRUCTURE.md`
+3) `docs/PROJECT-CONTEXT.md`
+4) `PRD-social.md`
+
+## 前端结构约定（重要）
+这次前端已完成组件/Hook 的系统性拆分，后续新增功能请继续遵循该结构。
+详细说明见：`docs/FRONTEND-STRUCTURE.md`
 
 ## 本地启动（常用）
 
