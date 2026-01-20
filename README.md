@@ -11,6 +11,7 @@
 - 个人设置：昵称/头像/微信/邮箱、自动警报时间、遗产说明
 - 紧急联系人：首选 1 个、备选多个（头像可上传）
 - 社交：好友添加、提醒/鼓励、站内通知
+- 群组：创建/加入、群公告、成员列表、群鼓励墙、群提醒、入群审核
 
 ## 新增功能说明
 - 趋势图：支持 14/30/90 天切换，展示睡眠/精力/心情曲线
@@ -18,7 +19,9 @@
 - 热力图：最近 180 天打卡日历热力图，按月标记
 - 最近记录：默认展示最近 10 条，按钮加载更多
 - 详情与编辑：点击记录展开详情，可编辑最近 N 天（默认 7 天）
-- 社交：点击「添加好友」弹出表单，站内通知按好友折叠
+- 社交：点击「添加好友」弹出表单，站内通知按好友/群组折叠
+- 群组：支持公开/私密、邀请码加入、入群审核、管理员改名/公告
+- 交互：轻提示替代顶部提示，移动端禁用页面缩放
 
 ## PRD 文档
 - 合并版：`PRD-social.md`
@@ -115,6 +118,25 @@ cloudflared tunnel --url http://localhost:5173
 - `GET /notifications?limit=`：站内通知列表
 - `POST /notifications/{id}/read`：标记已读
 - `POST /notifications/read-all`：全部已读
+- `GET /groups`：群组列表
+- `GET /groups/{id}`：群组详情
+- `POST /groups`：创建群组
+- `POST /groups/join`：加入群组（邀请码/群 ID）
+- `POST /groups/{id}/name`：更新群名称（管理员）
+- `POST /groups/{id}/invite-code`：刷新群邀请码（私密群管理员）
+- `POST /groups/{id}/announcement`：更新群公告（管理员）
+- `POST /groups/{id}/members/{user_id}/approve`：通过入群申请
+- `POST /groups/{id}/members/{user_id}/reject`：拒绝入群申请
+- `GET /groups/{id}/encouragements`：群鼓励墙
+- `POST /groups/{id}/encourage`：发送群鼓励
+- `POST /groups/{id}/remind`：群提醒
+
+## 回归清单（基础）
+- 登录/注册：注册、登录、刷新 token、退出
+- 打卡：今日打卡/更新、历史列表加载、详情展开、编辑最近 N 天
+- 统计：趋势图 14/30/90 切换、少于 5 天不展示曲线、热力图
+- 社交：添加好友、待确认/已发送状态、权限切换、提醒/鼓励
+- 通知：站内通知拉取、同人折叠、未读标记、全部已读
 
 ## 数据库迁移（SQLite）
 如果升级后出现 `no such column`，需要执行迁移或重建数据库：
@@ -185,6 +207,8 @@ sqlite3 backend/checkins.db < backend/migrations/social/002_friend_settings.sql
 sqlite3 backend/checkins.db < backend/migrations/social/003_reminders.sql
 sqlite3 backend/checkins.db < backend/migrations/social/004_encouragements.sql
 sqlite3 backend/checkins.db < backend/migrations/social/005_notifications.sql
+sqlite3 backend/checkins.db < backend/migrations/social/006_groups.sql
+sqlite3 backend/checkins.db < backend/migrations/social/007_notification_links.sql
 ```
 
 回滚（删除社交相关表）：

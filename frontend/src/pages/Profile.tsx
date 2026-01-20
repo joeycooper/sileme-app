@@ -48,6 +48,7 @@ export default function Profile() {
     estateNote: ""
   });
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [primaryContact, setPrimaryContact] = useState<Contact>(emptyContact());
   const [backupContacts, setBackupContacts] = useState<Contact[]>([]);
@@ -65,10 +66,32 @@ export default function Profile() {
   const dragState = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const PREVIEW_SIZE = 240;
   const OUTPUT_SIZE = 256;
+  const noticeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     void loadProfile();
   }, []);
+
+  useEffect(() => {
+    if (!error && !contactError) return;
+    const message = error || contactError;
+    if (message) {
+      setNoticeWithAutoClear(message);
+      setError(null);
+      setContactError(null);
+    }
+  }, [error, contactError]);
+
+  function setNoticeWithAutoClear(message: string) {
+    setNotice(message);
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+    }
+    noticeTimer.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimer.current = null;
+    }, 2000);
+  }
 
   async function loadProfile() {
     try {
@@ -298,8 +321,6 @@ export default function Profile() {
 
   return (
     <div className="page">
-      {error ? <p className="error">{error}</p> : null}
-
       <section className="card profile-hero">
         <div className="profile-hero-content">
           <label className="avatar-upload avatar-large">
@@ -466,7 +487,6 @@ export default function Profile() {
             关闭
           </button>
         </div>
-        {contactError ? <p className="error">{contactError}</p> : null}
         <div className="sheet-section">
           <h4>首选联系人（仅一个）</h4>
           <div className="contact-card">
@@ -707,6 +727,8 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {notice ? <div className="toast">{notice}</div> : null}
 
       {cropOpen && cropImageUrl ? (
         <div className="crop-overlay" role="dialog" aria-modal="true">

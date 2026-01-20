@@ -165,8 +165,63 @@ export type Notification = {
   from_user_id: number | null;
   from_user_name?: string | null;
   from_user_avatar?: string | null;
+  related_group_id?: number | null;
+  related_group_name?: string | null;
+  related_user_id?: number | null;
+  related_user_name?: string | null;
   created_at: string;
   read_at?: string | null;
+};
+
+export type GroupSummary = {
+  id: number;
+  name: string;
+  privacy: "public" | "private";
+  requires_approval: boolean;
+  members_count: number;
+  active_today: number;
+  unread_count: number;
+  status: "member" | "pending" | "none";
+};
+
+export type GroupMember = {
+  id: number;
+  name: string;
+  role: "owner" | "admin" | "member";
+  checked_in: boolean;
+};
+
+export type GroupDetail = {
+  id: number;
+  name: string;
+  privacy: "public" | "private";
+  requires_approval: boolean;
+  announcement?: string | null;
+  status: "member" | "pending" | "none";
+  members: GroupMember[];
+  join_code?: string | null;
+};
+
+export type GroupCreatePayload = {
+  name: string;
+  privacy: "public" | "private";
+  requires_approval: boolean;
+};
+
+export type GroupJoinPayload = {
+  code_or_id: string;
+};
+
+export type GroupEncouragePayload = {
+  emoji: string;
+  message?: string | null;
+};
+
+export type GroupEncouragePost = {
+  id: number;
+  author: string;
+  message: string;
+  created_at: string;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -255,6 +310,10 @@ function toFriendlyMessage(raw: string): string {
   if (lower.includes("blocked")) return "对方已将你拉黑或无法添加。";
   if (lower.includes("request not found")) return "请求不存在或已处理。";
   if (lower.includes("reminders disabled")) return "对方已关闭提醒。";
+  if (lower.includes("group not found")) return "群组不存在。";
+  if (lower.includes("invite code required")) return "该群需要邀请码。";
+  if (lower.includes("apply cooldown")) return "申请已提交，请 24 小时后再试";
+  if (lower.includes("not allowed")) return "没有权限执行该操作。";
   if (lower.includes("field required")) return "有必填项未填写，请检查。";
   if (lower.includes("string should match pattern")) return "手机号格式不正确。";
   if (lower.includes("string should have at least")) return "密码至少 8 位。";
@@ -300,6 +359,9 @@ async function refreshTokensOnce(): Promise<boolean> {
 async function apiFetch(input: RequestInfo, init: RequestInit = {}, retry = true) {
   loadTokensFromStorage();
   const headers = new Headers(init.headers || {});
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
@@ -524,4 +586,93 @@ export async function markAllNotificationsRead(): Promise<void> {
     method: "POST"
   });
   await handleJson(res);
+}
+
+export async function getGroups(): Promise<GroupSummary[]> {
+  const res = await apiFetch(`${API_BASE}/groups`);
+  return handleJson<GroupSummary[]>(res);
+}
+
+export async function getGroupDetail(groupId: number): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}`);
+  return handleJson<GroupDetail>(res);
+}
+
+export async function createGroup(payload: GroupCreatePayload): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function joinGroup(payload: GroupJoinPayload): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/join`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function updateGroupAnnouncement(
+  groupId: number,
+  announcement: string
+): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/announcement`, {
+    method: "POST",
+    body: JSON.stringify({ announcement })
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function updateGroupName(groupId: number, name: string): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/name`, {
+    method: "POST",
+    body: JSON.stringify({ name })
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function rotateGroupInviteCode(groupId: number): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/invite-code`, {
+    method: "POST"
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function getGroupEncouragements(groupId: number): Promise<GroupEncouragePost[]> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/encouragements`);
+  return handleJson<GroupEncouragePost[]>(res);
+}
+
+export async function sendGroupEncouragement(
+  groupId: number,
+  payload: GroupEncouragePayload
+): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/encourage`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  await handleJson(res);
+}
+
+export async function sendGroupReminder(groupId: number): Promise<void> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/remind`, {
+    method: "POST"
+  });
+  await handleJson(res);
+}
+
+export async function approveGroupMember(groupId: number, userId: number): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/members/${userId}/approve`, {
+    method: "POST"
+  });
+  return handleJson<GroupDetail>(res);
+}
+
+export async function rejectGroupMember(groupId: number, userId: number): Promise<GroupDetail> {
+  const res = await apiFetch(`${API_BASE}/groups/${groupId}/members/${userId}/reject`, {
+    method: "POST"
+  });
+  return handleJson<GroupDetail>(res);
 }

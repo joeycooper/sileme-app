@@ -206,6 +206,10 @@ class NotificationOut(BaseModel):
     from_user_id: int | None
     from_user_name: str | None = None
     from_user_avatar: str | None = None
+    related_group_id: int | None = None
+    related_group_name: str | None = None
+    related_user_id: int | None = None
+    related_user_name: str | None = None
     created_at: datetime
     read_at: datetime | None = None
 
@@ -216,3 +220,62 @@ class NotificationOut(BaseModel):
 class NotificationReadOut(BaseModel):
     id: int
     read_at: datetime
+
+
+class GroupCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=64)
+    privacy: str = Field(pattern=r"^(public|private)$")
+    requires_approval: bool = True
+
+
+class GroupJoinRequest(BaseModel):
+    code_or_id: str
+
+
+class GroupMemberOut(BaseModel):
+    id: int
+    name: str
+    role: str
+    checked_in: bool
+
+
+class GroupOut(BaseModel):
+    id: int
+    name: str
+    privacy: str
+    requires_approval: bool
+    members_count: int
+    active_today: int
+    unread_count: int = 0
+    status: str  # member | pending | none
+
+
+class GroupDetailOut(BaseModel):
+    id: int
+    name: str
+    privacy: str
+    requires_approval: bool
+    announcement: str | None = None
+    status: str
+    members: list[GroupMemberOut] = []
+    join_code: str | None = None
+
+
+class GroupAnnouncementUpdate(BaseModel):
+    announcement: str = Field(min_length=1, max_length=200)
+
+
+class GroupNameUpdate(BaseModel):
+    name: str = Field(min_length=1, max_length=64)
+
+
+class GroupEncourageRequest(BaseModel):
+    emoji: str = Field(min_length=1, max_length=16)
+    message: str | None = Field(default=None, max_length=140)
+
+
+class GroupEncourageOut(BaseModel):
+    id: int
+    author: str
+    message: str
+    created_at: datetime

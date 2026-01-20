@@ -242,6 +242,12 @@ export default function History() {
     };
   }, [days]);
 
+  useEffect(() => {
+    if (!error) return;
+    setNoticeWithAutoClear(error);
+    setError(null);
+  }, [error]);
+
   function setNoticeWithAutoClear(message: string) {
     setNotice(message);
     if (noticeTimer.current) {
@@ -426,8 +432,6 @@ export default function History() {
 
   return (
     <div className="page page-history">
-      {error ? <p className="error">{error}</p> : null}
-
       <section className="stats">
         <div className="stat-card">
           <span>平均睡眠</span>

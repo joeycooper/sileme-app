@@ -5,7 +5,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Notification, User
+from ..models import Group, Notification, User
 from ..schemas import NotificationOut, NotificationReadOut
 from ..security import get_current_user
 
@@ -29,11 +29,21 @@ def list_notifications(
     for item in notifications:
         from_user_name = None
         from_user_avatar = None
+        related_group_name = None
+        related_user_name = None
         if item.from_user_id:
             from_user = db.scalar(select(User).where(User.id == item.from_user_id))
             if from_user:
                 from_user_name = from_user.nickname or from_user.phone
                 from_user_avatar = from_user.avatar_url
+        if item.related_group_id:
+            group = db.scalar(select(Group).where(Group.id == item.related_group_id))
+            if group:
+                related_group_name = group.name
+        if item.related_user_id:
+            related_user = db.scalar(select(User).where(User.id == item.related_user_id))
+            if related_user:
+                related_user_name = related_user.nickname or related_user.phone
         results.append(
             NotificationOut(
                 id=item.id,
@@ -42,6 +52,10 @@ def list_notifications(
                 from_user_id=item.from_user_id,
                 from_user_name=from_user_name,
                 from_user_avatar=from_user_avatar,
+                related_group_id=item.related_group_id,
+                related_group_name=related_group_name,
+                related_user_id=item.related_user_id,
+                related_user_name=related_user_name,
                 created_at=item.created_at,
                 read_at=item.read_at,
             )

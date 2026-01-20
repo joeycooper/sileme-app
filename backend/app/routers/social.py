@@ -122,6 +122,10 @@ def request_friend(
             ensure_friend_settings(db, target.id, current_user.id)
             db.commit()
             return to_friend_out(db, current_user, existing, target)
+        if existing.status == "pending" and existing.user_id == current_user.id:
+            if payload.message is not None:
+                existing.message = payload.message
+                db.commit()
         return to_friend_out(db, current_user, existing, target)
 
     friendship = Friendship(

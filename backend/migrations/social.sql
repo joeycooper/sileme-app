@@ -67,13 +67,62 @@ CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY,
   user_id INTEGER NOT NULL,
   from_user_id INTEGER,
+  related_group_id INTEGER,
+  related_user_id INTEGER,
   kind TEXT NOT NULL,
   message TEXT NOT NULL,
   created_at DATETIME NOT NULL,
   read_at DATETIME,
   FOREIGN KEY(user_id) REFERENCES users(id),
-  FOREIGN KEY(from_user_id) REFERENCES users(id)
+  FOREIGN KEY(from_user_id) REFERENCES users(id),
+  FOREIGN KEY(related_group_id) REFERENCES groups(id),
+  FOREIGN KEY(related_user_id) REFERENCES users(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+
+CREATE TABLE IF NOT EXISTS groups (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  privacy TEXT NOT NULL,
+  requires_approval BOOLEAN NOT NULL DEFAULT 1,
+  join_code TEXT NOT NULL UNIQUE,
+  owner_id INTEGER NOT NULL,
+  announcement TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(owner_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS group_members (
+  id INTEGER PRIMARY KEY,
+  group_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  role TEXT NOT NULL,
+  status TEXT NOT NULL,
+  requested_at DATETIME NOT NULL,
+  approved_at DATETIME,
+  FOREIGN KEY(group_id) REFERENCES groups(id),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  UNIQUE(group_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS group_encouragements (
+  id INTEGER PRIMARY KEY,
+  group_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  emoji TEXT NOT NULL,
+  message TEXT,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(group_id) REFERENCES groups(id),
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS group_reminders (
+  id INTEGER PRIMARY KEY,
+  group_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(group_id) REFERENCES groups(id),
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);

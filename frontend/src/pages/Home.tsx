@@ -28,6 +28,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [lastCheckinTime, setLastCheckinTime] = useState<string | null>(null);
   const [lastCheckinTs, setLastCheckinTs] = useState<number | null>(null);
   const [countdown, setCountdown] = useState("24:00:00");
@@ -52,6 +53,12 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
       }
     };
   }, [isAuthed]);
+
+  useEffect(() => {
+    if (!error) return;
+    setNoticeWithAutoClear(error);
+    setError(null);
+  }, [error]);
 
   useEffect(() => {
     function handleAlarmChange(event: Event) {
@@ -96,6 +103,17 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
 
     return () => window.clearInterval(interval);
   }, [alarmHours]);
+
+  function setNoticeWithAutoClear(message: string) {
+    setNotice(message);
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+    }
+    noticeTimer.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimer.current = null;
+    }, 2000);
+  }
 
   async function refresh() {
     setError(null);
@@ -242,7 +260,6 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
             </span>
           </div>
 
-          {error ? <p className="error">{error}</p> : null}
         </form>
       </section>
 
@@ -307,6 +324,8 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
       <footer className="footer">
         <p>一个人也可以把生活记录得很隆重。</p>
       </footer>
+
+      {notice ? <div className="toast">{notice}</div> : null}
     </div>
   );
 }

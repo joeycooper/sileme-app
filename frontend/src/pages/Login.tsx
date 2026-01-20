@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authLogin, authRegister, requestSmsCode } from "../services/api";
 
 type Props = {
@@ -18,13 +18,34 @@ export default function Login({ onSuccess }: Props) {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
+  const noticeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     document.body.classList.add("login-mode");
     return () => {
       document.body.classList.remove("login-mode");
+      if (noticeTimer.current) {
+        window.clearTimeout(noticeTimer.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!error) return;
+    setNoticeWithAutoClear(error);
+    setError(null);
+  }, [error]);
+
+  function setNoticeWithAutoClear(message: string) {
+    setNotice(message);
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+    }
+    noticeTimer.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimer.current = null;
+    }, 2000);
+  }
 
   function normalizePhone(input: string) {
     const digits = input.replace(/\D/g, "");
@@ -102,7 +123,7 @@ export default function Login({ onSuccess }: Props) {
     }
     try {
       await requestSmsCode(normalizedPhone);
-      setNotice("验证码已发送（Mock：123456）");
+      setNoticeWithAutoClear("验证码已发送（Mock：123456）");
     } catch (err) {
       setError(err instanceof Error ? err.message : "发送验证码失败");
     }
@@ -186,8 +207,6 @@ export default function Login({ onSuccess }: Props) {
           <button className="primary" type="submit" disabled={loading}>
             {loading ? "提交中..." : isRegister ? "注册并登录" : "登录"}
           </button>
-          {notice ? <p className="notice">{notice}</p> : null}
-          {error ? <p className="error">{error}</p> : null}
         </form>
         <p className="login-hint">
           {isRegister ? "已有账号？" : "没有账号？"}
@@ -212,6 +231,7 @@ export default function Login({ onSuccess }: Props) {
           </button>
         </p>
       </div>
+      {notice ? <div className="toast">{notice}</div> : null}
     </div>
   );
 }
