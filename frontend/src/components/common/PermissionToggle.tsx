@@ -1,3 +1,5 @@
+import { Switch } from "@/components/ui/switch";
+
 type PermissionToggleProps = {
   label: string;
   checked: boolean;
@@ -12,14 +14,12 @@ export default function PermissionToggle({
   onChange
 }: PermissionToggleProps) {
   return (
-    <label className="toggle-row">
-      {label}
-      <input
-        type="checkbox"
-        className="toggle"
+    <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white/70 px-3 py-2 text-sm text-ink">
+      <span className="font-medium">{label}</span>
+      <Switch
         checked={checked}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        onCheckedChange={(value) => onChange(Boolean(value))}
       />
     </label>
   );

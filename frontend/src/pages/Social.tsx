@@ -135,7 +135,7 @@ export default function Social() {
   }
 
   return (
-    <div className="page page-social">
+    <div className="flex flex-col gap-6">
       <FriendSection
         friends={sectionProps.friend.friends}
         details={sectionProps.friend.details}

@@ -41,7 +41,7 @@ export default function History() {
   } = useHistoryState();
 
   return (
-    <div className="page page-history">
+    <div className="flex flex-col gap-6">
       <StatsSection summary={displaySummary} />
 
       <TrendSection

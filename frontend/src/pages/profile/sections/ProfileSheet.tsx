@@ -1,4 +1,8 @@
 import { ProfileForm } from "../types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type ProfileSheetProps = {
   activePanel: "profile" | "alarm" | "estate" | null;
@@ -16,12 +20,19 @@ export default function ProfileSheet({
   onSave
 }: ProfileSheetProps) {
   return (
-    <>
-      <div className={`sheet-overlay ${activePanel ? "show" : ""}`} onClick={onClose} />
-      <div className={`sheet ${activePanel ? "show" : ""}`}>
-        <div className="sheet-handle" />
-        <div className="sheet-header">
-          <h3>
+    <Sheet
+      open={Boolean(activePanel)}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="max-h-[calc(100vh-120px)] rounded-t-3xl border-border/70 bg-white/95 px-6 pb-10 overflow-y-auto"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+        <SheetHeader className="text-left">
+          <SheetTitle>
             {activePanel === "profile"
               ? "个人信息"
               : activePanel === "alarm"
@@ -29,88 +40,82 @@ export default function ProfileSheet({
               : activePanel === "estate"
               ? "遗产分配设置"
               : ""}
-          </h3>
-          <button className="link" type="button" onClick={onClose}>
-            关闭
-          </button>
-        </div>
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            编辑个人资料、警报时间与遗产说明。
+          </SheetDescription>
+        </SheetHeader>
         {activePanel === "profile" ? (
-          <div className="sheet-section">
-            <div className="fields">
-              <label>
-                昵称
-                <input
-                  type="text"
-                  placeholder="设置昵称"
-                  value={form.nickname}
-                  onChange={(e) => onFieldChange("nickname", e.target.value)}
-                  name="nickname"
-                />
-              </label>
-              <label>
-                微信号
-                <input
-                  type="text"
-                  placeholder="填写你的微信号"
-                  value={form.wechat}
-                  onChange={(e) => onFieldChange("wechat", e.target.value)}
-                  name="wechat"
-                />
-              </label>
-              <label>
-                邮箱
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={(e) => onFieldChange("email", e.target.value)}
-                  name="email"
-                />
-              </label>
-            </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              昵称
+              <Input
+                type="text"
+                placeholder="设置昵称"
+                value={form.nickname}
+                onChange={(e) => onFieldChange("nickname", e.target.value)}
+                name="nickname"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              微信号
+              <Input
+                type="text"
+                placeholder="填写你的微信号"
+                value={form.wechat}
+                onChange={(e) => onFieldChange("wechat", e.target.value)}
+                name="wechat"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              邮箱
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={(e) => onFieldChange("email", e.target.value)}
+                name="email"
+              />
+            </label>
           </div>
         ) : null}
         {activePanel === "alarm" ? (
-          <div className="sheet-section">
-            <div className="fields">
-              <label>
-                小时数
-                <input
-                  type="number"
-                  min="1"
-                  max="72"
-                  value={form.alarmHours}
-                  onChange={(e) => onFieldChange("alarmHours", e.target.value)}
-                  name="alarm_hours"
-                />
-              </label>
-            </div>
+          <div className="mt-4 grid gap-4">
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              小时数
+              <Input
+                type="number"
+                min="1"
+                max="72"
+                value={form.alarmHours}
+                onChange={(e) => onFieldChange("alarmHours", e.target.value)}
+                name="alarm_hours"
+              />
+            </label>
           </div>
         ) : null}
         {activePanel === "estate" ? (
-          <div className="sheet-section">
-            <div className="fields">
-              <label className="span-2">
-                说明
-                <textarea
-                  rows={4}
-                  placeholder="例如：遗产分配给家人..."
-                  value={form.estateNote}
-                  onChange={(e) => onFieldChange("estateNote", e.target.value)}
-                  name="estate_note"
-                />
-              </label>
-            </div>
+          <div className="mt-4 grid gap-4">
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              说明
+              <Textarea
+                rows={4}
+                placeholder="例如：遗产分配给家人..."
+                value={form.estateNote}
+                onChange={(e) => onFieldChange("estateNote", e.target.value)}
+                name="estate_note"
+              />
+            </label>
           </div>
         ) : null}
         {activePanel ? (
-          <div className="sheet-actions">
-            <button className="primary" type="button" onClick={onSave}>
+          <div className="mt-6 flex justify-end">
+            <Button className="h-11 rounded-full" type="button" onClick={onSave}>
               保存
-            </button>
+            </Button>
           </div>
         ) : null}
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

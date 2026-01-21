@@ -24,14 +24,19 @@ export default function NoticeGroupList({
       {groupedNotifications.map((group) => {
         const isOpen = openNoticeGroups[group.key];
         return (
-          <div key={group.key} className={`notice-group ${group.unreadCount ? "unread" : ""}`}>
+          <div
+            key={group.key}
+            className={`rounded-2xl border border-border/70 bg-white/90 ${
+              group.unreadCount ? "shadow-sm" : ""
+            }`}
+          >
             <NoticeGroupHeader
               group={group}
               isOpen={isOpen}
               onToggle={() => onToggleGroup(group.key)}
             />
             {isOpen ? (
-              <div className="notice-group-body">
+              <div className="flex flex-col border-t border-dashed border-border/70">
                 {group.items.map((item) => (
                   <NoticeGroupRow
                     key={item.id}

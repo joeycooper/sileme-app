@@ -26,7 +26,7 @@ export default function Login({ onSuccess }: Props) {
   } = useAuthForm({ onSuccess });
 
   return (
-    <div className="login-page">
+    <div className="flex min-h-[100svh] items-center justify-center px-4 py-6">
       <AuthForm
         isRegister={isRegister}
         phone={phone}

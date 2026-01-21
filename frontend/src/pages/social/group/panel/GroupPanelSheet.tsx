@@ -1,6 +1,7 @@
 import type { GroupForm } from "../../hooks/groupTypes";
 import GroupCreateCard from "./GroupCreateCard";
 import GroupJoinCard from "./GroupJoinCard";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type GroupPanelSheetProps = {
   open: boolean;
@@ -20,23 +21,28 @@ export default function GroupPanelSheet({
   onFieldChange
 }: GroupPanelSheetProps) {
   return (
-    <>
-      <div className={`sheet-overlay ${open ? "show" : ""}`} onClick={onClose} />
-      <div className={`sheet ${open ? "show" : ""}`} onClick={(event) => event.stopPropagation()}>
-        <div className="sheet-handle" />
-        <div className="sheet-header">
-          <h3>群组</h3>
-          <button className="link" type="button" onClick={onClose}>
-            关闭
-          </button>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="max-h-[calc(100vh-120px)] overflow-y-auto rounded-t-3xl border-border/70 bg-white/95 px-6 pb-10"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+        <SheetHeader className="text-left">
+          <SheetTitle>群组</SheetTitle>
+          <SheetDescription className="sr-only">
+            创建或加入群组，管理邀请码与审核设置。
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <GroupJoinCard form={form} onJoin={onJoin} onFieldChange={onFieldChange} />
+          <GroupCreateCard form={form} onCreate={onCreate} onFieldChange={onFieldChange} />
         </div>
-        <div className="sheet-section">
-          <div className="group-panel">
-            <GroupJoinCard form={form} onJoin={onJoin} onFieldChange={onFieldChange} />
-            <GroupCreateCard form={form} onCreate={onCreate} onFieldChange={onFieldChange} />
-          </div>
-        </div>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

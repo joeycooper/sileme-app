@@ -3,5 +3,5 @@ type LoadingStateProps = {
 };
 
 export default function LoadingState({ label = "加载中..." }: LoadingStateProps) {
-  return <p className="muted">{label}</p>;
+  return <p className="text-xs text-muted-foreground">{label}</p>;
 }

@@ -1,4 +1,6 @@
 import type { GroupDetail } from "../../../../services/api";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 type GroupAnnouncementBlockProps = {
   group: GroupDetail;
@@ -24,32 +26,32 @@ export default function GroupAnnouncementBlock({
   onSaveAnnouncement
 }: GroupAnnouncementBlockProps) {
   return (
-    <div className="group-detail-block">
-      <div className="group-block-header">
-        <h5>群公告</h5>
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-white/90 p-5 text-sm text-muted-foreground shadow-sm">
+      <div className="flex items-center justify-between">
+        <h5 className="text-sm font-semibold text-ink">群公告</h5>
         {isAdmin ? (
-          <button className="link" type="button" onClick={onToggleAnnouncementEdit}>
+          <Button variant="ghost" size="sm" type="button" onClick={onToggleAnnouncementEdit}>
             {isEditingAnnouncement ? "收起" : "编辑"}
-          </button>
+          </Button>
         ) : null}
       </div>
       {group.privacy === "private" && !isMember ? (
         <p>私密群暂不展示公告内容</p>
       ) : isEditingAnnouncement && isAdmin ? (
-        <div className="group-edit">
-          <textarea
+        <div className="space-y-3">
+          <Textarea
             value={announcementDraft}
             onChange={(event) => onAnnouncementChange(event.target.value)}
             rows={3}
             name="group_announcement"
           />
-          <div className="group-edit-actions">
-            <button className="secondary" type="button" onClick={onCancelAnnouncement}>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" type="button" onClick={onCancelAnnouncement}>
               取消
-            </button>
-            <button className="primary" type="button" onClick={onSaveAnnouncement}>
+            </Button>
+            <Button type="button" onClick={onSaveAnnouncement}>
               保存
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

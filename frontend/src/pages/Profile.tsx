@@ -50,7 +50,7 @@ export default function Profile() {
   } = useProfileData(showError);
 
   return (
-    <div className="page">
+    <div className="flex flex-col gap-6">
       <ProfileHero
         form={form}
         phone={phone}

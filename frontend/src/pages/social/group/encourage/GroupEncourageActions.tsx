@@ -1,5 +1,7 @@
 type EncourageOption = { label: string; emoji: string };
 
+import { Button } from "@/components/ui/button";
+
 type GroupEncourageActionsProps = {
   choice: string;
   options: EncourageOption[];
@@ -14,13 +16,13 @@ export default function GroupEncourageActions({
   onSend
 }: GroupEncourageActionsProps) {
   return (
-    <div className="group-encourage-card">
-      <h5>发送群鼓励</h5>
-      <div className="group-encourage-actions">
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-white/90 p-5 shadow-sm">
+      <h5 className="text-sm font-semibold text-ink">发送群鼓励</h5>
+      <div className="flex flex-wrap gap-2">
         <select
           value={choice}
           onChange={(event) => onChoiceChange(event.target.value)}
-          className="encourage-select"
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
           name="group_encourage_choice"
         >
           {options.map((option) => (
@@ -29,9 +31,9 @@ export default function GroupEncourageActions({
             </option>
           ))}
         </select>
-        <button className="primary" type="button" onClick={onSend}>
+        <Button type="button" onClick={onSend} className="rounded-full">
           发送鼓励
-        </button>
+        </Button>
       </div>
     </div>
   );

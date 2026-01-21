@@ -1,4 +1,5 @@
 import type { GroupForm } from "../../hooks/groupTypes";
+import { Switch } from "@/components/ui/switch";
 
 type GroupCreateControlsProps = {
   form: GroupForm;
@@ -7,25 +8,21 @@ type GroupCreateControlsProps = {
 
 export default function GroupCreateControls({ form, onFieldChange }: GroupCreateControlsProps) {
   return (
-    <div className="group-create-controls">
-      <label className="toggle-row">
-        <span>隐私群</span>
-        <input
-          type="checkbox"
-          className="toggle"
+    <div className="grid gap-2 md:grid-cols-2">
+      <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white/70 px-3 py-2 text-sm text-ink">
+        <span className="font-medium">隐私群</span>
+        <Switch
           checked={form.privacy === "private"}
-          onChange={(event) =>
-            onFieldChange("privacy", event.target.checked ? "private" : "public")
+          onCheckedChange={(value) =>
+            onFieldChange("privacy", value ? "private" : "public")
           }
         />
       </label>
-      <label className="toggle-row">
-        <span>入群需审核</span>
-        <input
-          type="checkbox"
-          className="toggle"
+      <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white/70 px-3 py-2 text-sm text-ink">
+        <span className="font-medium">入群需审核</span>
+        <Switch
           checked={form.requiresApproval}
-          onChange={(event) => onFieldChange("requiresApproval", event.target.checked)}
+          onCheckedChange={(value) => onFieldChange("requiresApproval", Boolean(value))}
         />
       </label>
     </div>

@@ -1,5 +1,6 @@
 import type { Friend, FriendDetail } from "../../../../services/api";
 import type { EncourageOption } from "./types";
+import { Button } from "@/components/ui/button";
 
 type FriendDetailActionsProps = {
   friend: Friend;
@@ -26,36 +27,31 @@ export default function FriendDetailActions({
 }: FriendDetailActionsProps) {
   if (friend.status === "pending_in") {
     return (
-      <button
-        className="primary"
-        type="button"
-        disabled={actionLoadingId === friend.id}
-        onClick={() => onAccept(friend.id)}
-      >
+      <Button type="button" disabled={actionLoadingId === friend.id} onClick={() => onAccept(friend.id)}>
         通过好友
-      </button>
+      </Button>
     );
   }
 
   if (friend.status === "pending_out") {
-    return <span className="muted">等待对方确认</span>;
+    return <span className="text-xs text-muted-foreground">等待对方确认</span>;
   }
 
   return (
     <>
-      <button
-        className="secondary"
+      <Button
         type="button"
+        variant="outline"
         disabled={actionLoadingId === friend.id || (detail ? !detail.permission.can_remind : false)}
         onClick={() => onRemind(friend.id)}
       >
         提醒打卡
-      </button>
-      <div className="encourage-group">
+      </Button>
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
         <select
           value={encourageChoice}
           onChange={(event) => onEncourageChoiceChange(event.target.value)}
-          className="encourage-select"
+          className="h-9 rounded-md border border-border bg-white px-3 text-sm text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
           name="encourage_choice"
         >
           {encourageOptions.map((option) => (
@@ -64,14 +60,9 @@ export default function FriendDetailActions({
             </option>
           ))}
         </select>
-        <button
-          className="secondary"
-          type="button"
-          disabled={actionLoadingId === friend.id}
-          onClick={() => onEncourage(friend.id)}
-        >
+        <Button type="button" variant="outline" disabled={actionLoadingId === friend.id} onClick={() => onEncourage(friend.id)}>
           发送鼓励
-        </button>
+        </Button>
       </div>
     </>
   );

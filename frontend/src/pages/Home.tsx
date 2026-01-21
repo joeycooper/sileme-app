@@ -28,7 +28,7 @@ export default function Home({ isAuthed, onRequireLogin }: HomeProps) {
   const countdown = useAlarmCountdown(alarmHours, lastCheckinTsRef);
 
   return (
-    <div className="page page-home">
+    <div className="flex flex-col gap-6">
       <HeroSection countdown={countdown} hasToday={Boolean(today)} />
       <AliveSection
         loading={loading}

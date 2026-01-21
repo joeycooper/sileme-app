@@ -15,29 +15,33 @@ export default function GroupCard({
 }: GroupCardProps) {
   return (
     <button
-      className="group-card"
+      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-white/90 px-4 py-3 text-left transition hover:border-brand/40 hover:shadow-sm"
       type="button"
       onClick={() => (isMember ? onOpenEncourage(group.id) : onOpenDetail(group.id))}
     >
-      <div className="group-avatar" aria-hidden="true">
-        <span className="group-avatar-mark" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft" aria-hidden="true">
+        <span className="h-4 w-4 rounded-md bg-brand" />
       </div>
-      <div className="group-info">
-        <div className="group-name">
+      <div className="flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink">
           {group.name}
           {group.privacy === "private" ? (
-            <span className="group-badge private">私密</span>
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600">
+              私密
+            </span>
           ) : null}
           {isMember && group.unread_count ? (
-            <span className="group-badge">未读 {group.unread_count}</span>
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">
+              未读 {group.unread_count}
+            </span>
           ) : null}
         </div>
-        <div className="group-meta">
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span>{group.members_count} 人</span>
           <span>今日活跃 {group.active_today}</span>
         </div>
       </div>
-      <span className="group-chevron" aria-hidden="true">
+      <span className="text-lg text-muted-foreground" aria-hidden="true">
         ›
       </span>
     </button>

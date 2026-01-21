@@ -1,5 +1,7 @@
 import ContactCard from "./ContactCard";
 import { Contact } from "../types";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type ContactsSheetProps = {
   open: boolean;
@@ -31,49 +33,58 @@ export default function ContactsSheet({
   onSave
 }: ContactsSheetProps) {
   return (
-    <>
-      <div className={`sheet-overlay ${open ? "show" : ""}`} onClick={onClose} />
-      <div className={`sheet ${open ? "show" : ""}`}>
-        <div className="sheet-handle" />
-        <div className="sheet-header">
-          <h3>紧急联系人</h3>
-          <button className="link" type="button" onClick={onClose}>
-            关闭
-          </button>
-        </div>
-        <div className="sheet-section">
-          <h4>首选联系人（仅一个）</h4>
-          <ContactCard
-            contact={primaryContact}
-            namePrefix="primary"
-            onFieldChange={onPrimaryFieldChange}
-            onAvatarUpload={(file) => onAvatarUpload(file, "primary")}
-          />
-        </div>
-
-        <div className="sheet-section">
-          <h4>备选联系人</h4>
-          {backupContacts.map((contact) => (
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="max-h-[calc(100vh-120px)] rounded-t-3xl border-border/70 bg-white/95 px-6 pb-10 overflow-y-auto"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+        <SheetHeader className="text-left">
+          <SheetTitle>紧急联系人</SheetTitle>
+          <SheetDescription className="sr-only">
+            管理首选与备选紧急联系人信息。
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-4 space-y-4">
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-ink">首选联系人（仅一个）</h4>
             <ContactCard
-              key={contact.id}
-              contact={contact}
-              namePrefix={`backup_${contact.id}`}
-              onFieldChange={(key, value) => onBackupFieldChange(contact.id, key, value)}
-              onAvatarUpload={(file) => onAvatarUpload(file, "backup", contact.id)}
-              onRemove={() => onRemoveBackup(contact.id)}
+              contact={primaryContact}
+              namePrefix="primary"
+              onFieldChange={onPrimaryFieldChange}
+              onAvatarUpload={(file) => onAvatarUpload(file, "primary")}
             />
-          ))}
-          <button className="secondary" type="button" onClick={onAddBackup}>
-            添加备选联系人
-          </button>
-        </div>
+          </div>
 
-        <div className="sheet-actions">
-          <button className="primary" type="button" onClick={onSave}>
-            保存联系人
-          </button>
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-ink">备选联系人</h4>
+            {backupContacts.map((contact) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                namePrefix={`backup_${contact.id}`}
+                onFieldChange={(key, value) => onBackupFieldChange(contact.id, key, value)}
+                onAvatarUpload={(file) => onAvatarUpload(file, "backup", contact.id)}
+                onRemove={() => onRemoveBackup(contact.id)}
+              />
+            ))}
+            <Button variant="outline" type="button" onClick={onAddBackup} className="rounded-full">
+              添加备选联系人
+            </Button>
+          </div>
+
+          <div className="flex justify-end">
+            <Button className="h-11 rounded-full" type="button" onClick={onSave}>
+              保存联系人
+            </Button>
+          </div>
         </div>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

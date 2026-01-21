@@ -6,6 +6,7 @@ import {
   GroupIdentityRow,
   GroupMembersBlock
 } from "../group/detail";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type GroupDetailSheetProps = {
   open: boolean;
@@ -65,21 +66,25 @@ export default function GroupDetailSheet({
   onJoinPrivate
 }: GroupDetailSheetProps) {
   return (
-    <>
-      <div className={`sheet-overlay ${open ? "show" : ""}`} onClick={onClose} />
-      <div
-        className={`sheet ${open ? "show" : ""} ${isPrivate ? "group-detail-fixed" : ""}`}
-        onClick={(event) => event.stopPropagation()}
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        className="max-h-[calc(100vh-120px)] overflow-y-auto rounded-t-3xl border-border/70 bg-white/95 px-6 pb-10"
       >
-        <div className="sheet-handle" />
-        <div className="sheet-header">
-          <h3>群组详情</h3>
-          <button className="link" type="button" onClick={onClose}>
-            关闭
-          </button>
-        </div>
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200" />
+        <SheetHeader className="text-left">
+          <SheetTitle>群组详情</SheetTitle>
+          <SheetDescription className="sr-only">
+            查看群组信息、公告、成员与加入方式。
+          </SheetDescription>
+        </SheetHeader>
         {group ? (
-          <div className="sheet-section group-detail">
+          <div className="mt-4 flex flex-col gap-4">
             <GroupDetailHeader
               group={group}
               isAdmin={isAdmin}
@@ -121,7 +126,7 @@ export default function GroupDetailSheet({
             />
           </div>
         ) : null}
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

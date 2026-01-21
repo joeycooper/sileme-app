@@ -1,5 +1,8 @@
 import StarRating from "../components/StarRating";
 import { HomeForm } from "../constants";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 
 type FieldsSectionProps = {
   form: HomeForm;
@@ -8,51 +11,46 @@ type FieldsSectionProps = {
 
 export default function FieldsSection({ form, onFieldChange }: FieldsSectionProps) {
   return (
-    <section className="card">
-      <div className="fields">
-        <div className="compact-row">
-          <label className="compact-field">
-            睡眠
-            <input
-              type="number"
-              min="0"
-              max="24"
-              placeholder="7"
-              value={form.sleep_hours}
-              onChange={(e) => onFieldChange("sleep_hours", e.target.value)}
-              name="sleep_hours"
-            />
-          </label>
-          <label className="compact-field">
-            精力
-            <div className="compact-stars">
+    <section>
+      <Card className="border-border/70 bg-white/85 shadow-soft backdrop-blur">
+        <CardContent className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              睡眠
+              <Input
+                type="number"
+                min="0"
+                max="24"
+                placeholder="7"
+                value={form.sleep_hours}
+                onChange={(e) => onFieldChange("sleep_hours", e.target.value)}
+                name="sleep_hours"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              精力
               <StarRating
                 value={form.energy}
                 onChange={(value) => onFieldChange("energy", value)}
               />
-            </div>
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+              心情
+              <StarRating value={form.mood} onChange={(value) => onFieldChange("mood", value)} />
+            </label>
+          </div>
+          <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+            备注
+            <Textarea
+              placeholder="今天的我..."
+              value={form.note}
+              onChange={(e) => onFieldChange("note", e.target.value)}
+              name="note"
+              className="min-h-[88px]"
+            />
           </label>
-          <label className="compact-field">
-            心情
-            <div className="compact-stars">
-              <StarRating
-                value={form.mood}
-                onChange={(value) => onFieldChange("mood", value)}
-              />
-            </div>
-          </label>
-        </div>
-        <label className="span-2">
-          备注
-          <input
-            type="text"
-            placeholder="今天的我..."
-            value={form.note}
-            onChange={(e) => onFieldChange("note", e.target.value)}
-            name="note"
-          />
-        </label>
-      </div>
+        </CardContent>
+      </Card>
     </section>
   );
 }

@@ -1,4 +1,6 @@
 import type { GroupDetail } from "../../../../services/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type GroupDetailHeaderProps = {
   group: GroupDetail;
@@ -18,29 +20,30 @@ export default function GroupDetailHeader({
   onGroupNameChange
 }: GroupDetailHeaderProps) {
   return (
-    <div className="group-detail-header">
-      <div className="group-avatar large" aria-hidden="true">
-        <span className="group-avatar-mark" />
+    <div className="flex items-center gap-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft" aria-hidden="true">
+        <span className="h-5 w-5 rounded-md bg-brand" />
       </div>
-      <div>
-        <div className="group-title-row">
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
           {isEditingGroupName ? (
-            <input
+            <Input
               type="text"
               value={groupNameDraft}
               onChange={(event) => onGroupNameChange(event.target.value)}
               name="group_name_edit"
+              className="h-9 w-48"
             />
           ) : (
-            <h4>{group.name}</h4>
+            <h4 className="text-lg font-semibold text-ink">{group.name}</h4>
           )}
           {isAdmin ? (
-            <button className="link" type="button" onClick={onToggleGroupNameEdit}>
+            <Button variant="ghost" size="sm" type="button" onClick={onToggleGroupNameEdit}>
               {isEditingGroupName ? "保存" : "改名"}
-            </button>
+            </Button>
           ) : null}
         </div>
-        <p>
+        <p className="text-xs text-muted-foreground">
           {group.members.length} 人 · 今日活跃{" "}
           {group.members.filter((member) => member.checked_in).length}
         </p>

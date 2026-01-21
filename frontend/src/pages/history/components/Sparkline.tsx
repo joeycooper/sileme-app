@@ -40,11 +40,11 @@ export function Sparkline({
   }, [values, min, max, chartWidth]);
 
   if (values.length === 0) {
-    return <span className="muted">暂无趋势数据</span>;
+    return <span className="text-xs text-muted-foreground">暂无趋势数据</span>;
   }
 
   if (!points || points.length === 0) {
-    return <span className="muted">暂无趋势数据</span>;
+    return <span className="text-xs text-muted-foreground">暂无趋势数据</span>;
   }
 
   const d =
@@ -73,10 +73,10 @@ export function Sparkline({
       : 100 - ((Math.min(Math.max(baseline, safeMin), safeMax) - safeMin) / span) * 100;
 
   return (
-    <div className="sparkline-wrap">
+    <div className="w-full overflow-x-auto pb-1">
       <svg
         viewBox={`0 0 ${chartWidth} 100`}
-        className={`sparkline${className ? ` ${className}` : ""}`}
+        className={`h-20 w-full min-w-full ${className ?? ""}`}
         style={{ width: `${chartWidth}px` }}
         aria-hidden="true"
       >
@@ -87,14 +87,16 @@ export function Sparkline({
               x2={chartWidth}
               y1={baselineY}
               y2={baselineY}
-              className="sparkline-baseline"
+              className="stroke-slate-300"
+              strokeWidth="2"
+              strokeDasharray="4 4"
             />
             {baselineLabel ? (
               <text
                 x={chartWidth - 2}
                 y={Math.max(baselineY - 2, 8)}
                 textAnchor="end"
-                className="sparkline-baseline-label"
+                className="fill-slate-500 text-[10px] font-semibold"
               >
                 {baselineLabel}
               </text>
@@ -132,7 +134,7 @@ export class SparklineBoundary extends Component<{ children: ReactNode }, { hasE
 
   render() {
     if (this.state.hasError) {
-      return <span className="muted">趋势渲染失败</span>;
+      return <span className="text-xs text-muted-foreground">趋势渲染失败</span>;
     }
     return this.props.children;
   }

@@ -24,5 +24,5 @@ export default function NoticeList({
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
 
-  return <div className="notice-list">{children}</div>;
+  return <div className="flex flex-col gap-3">{children}</div>;
 }

@@ -1,4 +1,6 @@
 import type { GroupDetail } from "../../../../services/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type GroupActionsBlockProps = {
   group: GroupDetail;
@@ -26,37 +28,32 @@ export default function GroupActionsBlock({
   onJoinPrivate
 }: GroupActionsBlockProps) {
   return (
-    <div className="group-detail-block">
-      <h5>操作</h5>
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-white/90 p-5 text-sm text-muted-foreground shadow-sm">
+      <h5 className="text-sm font-semibold text-ink">操作</h5>
       {isMember ? (
-        <div className="group-detail-actions">
-          <button className="primary" type="button" onClick={onOpenEncourage}>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={onOpenEncourage}>
             进入群鼓励
-          </button>
-          <button className="secondary" type="button" onClick={onGroupRemind}>
+          </Button>
+          <Button variant="outline" type="button" onClick={onGroupRemind}>
             群提醒
-          </button>
+          </Button>
         </div>
       ) : (
-        <div className="group-join-actions">
+        <div className="space-y-3">
           {group.privacy === "public" && !group.requires_approval ? (
-            <button className="primary" type="button" onClick={onJoinDirect}>
+            <Button type="button" onClick={onJoinDirect}>
               直接加入群组
-            </button>
+            </Button>
           ) : group.privacy === "public" ? (
-            <button
-              className="primary"
-              type="button"
-              onClick={onJoinRequest}
-              disabled={joinCooldownActive}
-            >
+            <Button type="button" onClick={onJoinRequest} disabled={joinCooldownActive}>
               {joinCooldownActive ? "已提交申请" : "申请加入"}
-            </button>
+            </Button>
           ) : (
-            <div className="group-inline-join">
-              <label>
+            <div className="grid gap-2">
+              <label className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
                 邀请码
-                <input
+                <Input
                   type="text"
                   placeholder="输入邀请码"
                   name="group_invite"
@@ -64,17 +61,12 @@ export default function GroupActionsBlock({
                   onChange={(event) => onInviteChange(event.target.value)}
                 />
               </label>
-              <button
-                className="primary"
-                type="button"
-                onClick={onJoinPrivate}
-                disabled={!groupInviteDraft.trim()}
-              >
+              <Button type="button" onClick={onJoinPrivate} disabled={!groupInviteDraft.trim()}>
                 加入群组
-              </button>
+              </Button>
             </div>
           )}
-          <p className="muted">
+          <p className="text-xs text-muted-foreground">
             {group.privacy === "public"
               ? group.requires_approval
                 ? "该群为公开群，加入需审核"

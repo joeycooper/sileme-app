@@ -1,4 +1,7 @@
 import { Contact } from "../types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type ContactCardProps = {
   contact: Contact;
@@ -18,15 +21,20 @@ export default function ContactCard({
   namePrefix = "contact"
 }: ContactCardProps) {
   return (
-    <div className="contact-card">
+    <div className="grid gap-4 rounded-2xl border border-border/70 bg-white/90 p-4 md:grid-cols-[120px_1fr]">
       {title ? <h4>{title}</h4> : null}
-      <div className="contact-avatar">
-        <label className="avatar-upload">
-          {contact.avatar ? <img src={contact.avatar} alt="头像" /> : <span>上传头像</span>}
+      <div className="flex items-start justify-center">
+        <label className="relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border bg-white text-xs text-muted-foreground">
+          {contact.avatar ? (
+            <img src={contact.avatar} alt="头像" className="h-full w-full object-cover" />
+          ) : (
+            <span>上传头像</span>
+          )}
           <input
             type="file"
             accept="image/*"
             name={`${namePrefix}_avatar`}
+            className="absolute inset-0 cursor-pointer opacity-0"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) onAvatarUpload(file);
@@ -34,10 +42,10 @@ export default function ContactCard({
           />
         </label>
       </div>
-      <div className="fields">
-        <label>
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           姓名
-          <input
+          <Input
             type="text"
             value={contact.name}
             onChange={(e) => onFieldChange("name", e.target.value)}
@@ -45,9 +53,9 @@ export default function ContactCard({
             required
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           关系
-          <input
+          <Input
             type="text"
             value={contact.relation}
             onChange={(e) => onFieldChange("relation", e.target.value)}
@@ -55,9 +63,9 @@ export default function ContactCard({
             required
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           手机号
-          <input
+          <Input
             type="tel"
             value={contact.phone}
             onChange={(e) => onFieldChange("phone", e.target.value)}
@@ -65,27 +73,27 @@ export default function ContactCard({
             required
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           微信
-          <input
+          <Input
             type="text"
             value={contact.wechat || ""}
             onChange={(e) => onFieldChange("wechat", e.target.value)}
             name={`${namePrefix}_wechat`}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           邮箱
-          <input
+          <Input
             type="email"
             value={contact.email || ""}
             onChange={(e) => onFieldChange("email", e.target.value)}
             name={`${namePrefix}_email`}
           />
         </label>
-        <label className="span-2">
+        <label className="md:col-span-2 flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           备注
-          <textarea
+          <Textarea
             rows={2}
             value={contact.note || ""}
             onChange={(e) => onFieldChange("note", e.target.value)}
@@ -94,9 +102,14 @@ export default function ContactCard({
         </label>
       </div>
       {onRemove ? (
-        <button className="link danger" type="button" onClick={onRemove}>
+        <Button
+          className="mt-2 w-fit text-red-600 hover:text-red-700"
+          variant="ghost"
+          type="button"
+          onClick={onRemove}
+        >
           删除
-        </button>
+        </Button>
       ) : null}
     </div>
   );

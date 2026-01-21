@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Plus, RefreshCw } from "lucide-react";
+
 type FriendSectionHeaderProps = {
   onAddClick: () => void;
   onRefresh: () => void;
@@ -5,23 +8,15 @@ type FriendSectionHeaderProps = {
 
 export default function FriendSectionHeader({ onAddClick, onRefresh }: FriendSectionHeaderProps) {
   return (
-    <div className="notice-actions">
-      <button className="secondary add-friend-trigger" type="button" onClick={onAddClick}>
-        <span className="add-friend-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" role="img" focusable="false">
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </span>
+    <div className="flex items-center gap-2">
+      <Button type="button" variant="outline" onClick={onAddClick} className="rounded-full">
+        <Plus className="h-4 w-4" />
         添加好友
-      </button>
-      <button className="secondary" type="button" onClick={onRefresh}>
+      </Button>
+      <Button type="button" variant="outline" onClick={onRefresh} className="rounded-full">
+        <RefreshCw className="h-4 w-4" />
         刷新
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { PointerEvent, RefObject } from "react";
 import { PREVIEW_SIZE } from "../constants";
+import { Button } from "@/components/ui/button";
 
 type CropModalProps = {
   open: boolean;
@@ -38,20 +39,24 @@ export default function CropModal({
 }: CropModalProps) {
   if (!open || !cropImageUrl) return null;
   return (
-    <div className="crop-overlay" role="dialog" aria-modal="true">
-      <div className="crop-panel">
-        <div className="crop-header">
-          <h3>裁剪头像</h3>
-          <button className="link" type="button" onClick={onCancel}>
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 px-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-3xl border border-border/70 bg-white/95 p-6 shadow-lift">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-ink">裁剪头像</h3>
+          <Button variant="ghost" type="button" onClick={onCancel}>
             关闭
-          </button>
+          </Button>
         </div>
-        <div className="crop-preview" ref={cropPreviewRef} style={{ width: PREVIEW_SIZE }}>
+        <div
+          className="mx-auto mt-4 grid h-60 w-60 touch-none place-items-center overflow-hidden rounded-3xl border border-border/70 bg-slate-50"
+          ref={cropPreviewRef}
+          style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE }}
+        >
           {cropImage ? (
             <img
               src={cropImageUrl}
               alt="头像预览"
-              className="crop-image"
+              className="touch-none select-none cursor-grab active:cursor-grabbing"
               ref={cropImageRef}
               style={{
                 width: cropImage.width * cropBaseScale,
@@ -64,7 +69,7 @@ export default function CropModal({
             />
           ) : null}
         </div>
-        <div className="crop-controls">
+        <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
           <span>缩放</span>
           <input
             type="range"
@@ -75,13 +80,13 @@ export default function CropModal({
             onChange={(event) => onScaleChange(Number(event.target.value))}
           />
         </div>
-        <div className="crop-actions">
-          <button className="secondary" type="button" onClick={onCancel}>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="outline" type="button" onClick={onCancel}>
             取消
-          </button>
-          <button className="primary" type="button" onClick={onSave} disabled={cropSaving}>
+          </Button>
+          <Button type="button" onClick={onSave} disabled={cropSaving}>
             {cropSaving ? "保存中..." : "保存头像"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

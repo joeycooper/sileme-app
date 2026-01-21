@@ -13,19 +13,19 @@ export default function SectionHeader({
   subtitle,
   actions,
   className,
-  actionsClassName = "notice-actions"
+  actionsClassName
 }: SectionHeaderProps) {
-  const headerClassName = className
-    ? `form-header header-row ${className}`
-    : "form-header header-row";
-
   return (
-    <div className={headerClassName}>
-      <div>
-        <h2>{title}</h2>
-        {subtitle ? <p>{subtitle}</p> : null}
+    <div
+      className={`mb-2 flex flex-wrap items-start justify-between gap-3 ${className ?? ""}`}
+    >
+      <div className="min-w-0">
+        <h2 className="text-xl font-semibold text-ink">{title}</h2>
+        {subtitle ? <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p> : null}
       </div>
-      {actions ? <div className={actionsClassName}>{actions}</div> : null}
+      {actions ? (
+        <div className={actionsClassName ?? "flex items-center gap-2"}>{actions}</div>
+      ) : null}
     </div>
   );
 }

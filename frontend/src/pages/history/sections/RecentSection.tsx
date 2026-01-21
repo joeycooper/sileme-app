@@ -1,6 +1,10 @@
 import { EmptyState } from "../../../components/common";
 import { Checkin, Summary } from "../../../services/api";
 import { dateKey, formatDate } from "../utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 
 type EditDraft = {
   sleep_hours: string;
@@ -49,25 +53,31 @@ export default function RecentSection({
   onExport
 }: RecentSectionProps) {
   return (
-    <section className="card">
-      <div className="form-header header-row">
-        <div>
-          <h2>最近打卡</h2>
-          <p>按日期查看最近 30 天记录</p>
-        </div>
-        <button className="secondary export-button" type="button" onClick={onExport}>
-          导出 CSV
-        </button>
-      </div>
-      <div className="history-list">
+    <section>
+      <Card className="border-border/70 bg-white/85 shadow-soft backdrop-blur">
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-ink">最近打卡</h2>
+              <p className="mt-1 text-xs text-muted-foreground">按日期查看最近 30 天记录</p>
+            </div>
+            <Button variant="outline" size="sm" className="rounded-full" type="button" onClick={onExport}>
+              导出 CSV
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3">
         {listItems.length === 0 ? (
           <EmptyState title="还没有打卡记录" description="在首页点击“我还活着”，这里就会出现记录。" />
         ) : (
           <>
             {visibleItems.map((item) => (
-              <div key={item.date} className="history-item">
+              <div key={item.date} className="space-y-2">
                 <div
-                  className={`history-row clickable ${item.checked_in ? "hit" : "miss"}`}
+                  className={`grid cursor-pointer grid-cols-1 items-center gap-2 rounded-xl border px-4 py-3 text-sm transition hover:shadow-sm md:grid-cols-[1.4fr_2.2fr] ${
+                    item.checked_in
+                      ? "border-brand/40 bg-brand/10 text-ink"
+                      : "border-border bg-white/80 text-muted-foreground"
+                  }`}
                   role="button"
                   tabIndex={0}
                   onClick={() => onToggleDetail(item)}
@@ -78,25 +88,25 @@ export default function RecentSection({
                     }
                   }}
                 >
-                  <div className="history-date">
-                    <span>{formatDate(item.date)}</span>
-                    <span className="muted-inline">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold text-ink">{formatDate(item.date)}</span>
+                    <span className="text-xs text-muted-foreground">
                       {item.checked_in ? "已记录" : "未记录"}
                     </span>
                   </div>
-                  <span className="history-metrics">
-                    睡眠 {item.sleep_hours ?? "-"}h · 精力 {item.energy ?? "-"} · 心情 {" "}
+                  <span className="text-xs text-muted-foreground">
+                    睡眠 {item.sleep_hours ?? "-"}h · 精力 {item.energy ?? "-"} · 心情{" "}
                     {item.mood ?? "-"}
                   </span>
                 </div>
                 {expandedDate === dateKey(item.date) ? (
-                  <div className="history-detail inline">
+                  <div className="space-y-3 rounded-xl border border-border/60 bg-white/90 p-5 text-sm text-muted-foreground shadow-sm animate-expand">
                     {editingDate === dateKey(item.date) ? (
                       <>
-                        <div className="history-detail-form">
-                          <label>
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <label className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
                             睡眠
-                            <input
+                            <Input
                               type="number"
                               min="0"
                               max="24"
@@ -106,9 +116,9 @@ export default function RecentSection({
                               }
                             />
                           </label>
-                          <label>
+                          <label className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
                             精力
-                            <input
+                            <Input
                               type="number"
                               min="1"
                               max="5"
@@ -118,9 +128,9 @@ export default function RecentSection({
                               }
                             />
                           </label>
-                          <label>
+                          <label className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
                             心情
-                            <input
+                            <Input
                               type="number"
                               min="1"
                               max="5"
@@ -131,47 +141,46 @@ export default function RecentSection({
                             />
                           </label>
                         </div>
-                        <label className="history-detail-note">
-                          <span className="muted-inline">备注</span>
-                          <textarea
+                        <label className="flex flex-col gap-2 text-xs font-medium text-muted-foreground">
+                          <span>备注</span>
+                          <Textarea
                             rows={2}
                             value={editDraft.note}
-                            onChange={(event) =>
-                              onEditFieldChange("note", event.target.value)
-                            }
+                            onChange={(event) => onEditFieldChange("note", event.target.value)}
                           />
                         </label>
-                        <div className="history-detail-actions">
-                          <button type="button" className="secondary" onClick={onCancelEdit} disabled={saving}>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={onCancelEdit} disabled={saving}>
                             取消
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
-                            className="primary"
                             onClick={() => onSaveEdit(item)}
                             disabled={saving}
                           >
                             {saving ? "保存中..." : "保存"}
-                          </button>
+                          </Button>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="history-detail-row">
-                          睡眠 {item.sleep_hours ?? "-"}h · 精力 {item.energy ?? "-"} · 心情 {" "}
+                        <div className="text-xs text-muted-foreground">
+                          睡眠 {item.sleep_hours ?? "-"}h · 精力 {item.energy ?? "-"} · 心情{" "}
                           {item.mood ?? "-"}
                         </div>
-                        <div className="history-detail-note">
-                          <span className="muted-inline">备注</span>
-                          <p>{checkinsByDate.get(dateKey(item.date))?.note || "无"}</p>
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-medium text-ink">备注</span>
+                          <p className="mt-1 text-sm text-ink">
+                            {checkinsByDate.get(dateKey(item.date))?.note || "无"}
+                          </p>
                         </div>
-                        <div className="history-detail-actions">
+                        <div className="flex items-center justify-between">
                           {canEdit(item.date) ? (
-                            <button type="button" className="link" onClick={() => onStartEdit(item)}>
+                            <Button type="button" variant="ghost" onClick={() => onStartEdit(item)}>
                               编辑
-                            </button>
+                            </Button>
                           ) : (
-                            <span className="muted-inline">仅支持最近 {editWindowDays} 天编辑</span>
+                            <span className="text-xs text-muted-foreground">仅支持最近 {editWindowDays} 天编辑</span>
                           )}
                         </div>
                       </>
@@ -181,15 +190,19 @@ export default function RecentSection({
               </div>
             ))}
             {hasMore ? (
-              <button type="button" className="secondary load-more" onClick={onLoadMore}>
+              <Button type="button" variant="outline" className="w-full rounded-full" onClick={onLoadMore}>
                 加载更多
-              </button>
+              </Button>
             ) : (
-              <div className="inline-notice">已经到底啦，明天继续打卡吧。</div>
+              <div className="rounded-full border border-border/60 px-4 py-2 text-center text-xs text-muted-foreground">
+                已经到底啦，明天继续打卡吧。
+              </div>
             )}
           </>
         )}
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 }

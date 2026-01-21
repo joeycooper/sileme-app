@@ -1,4 +1,6 @@
 import type { GroupForm } from "../../hooks/groupTypes";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type GroupJoinCardProps = {
   form: GroupForm;
@@ -8,12 +10,12 @@ type GroupJoinCardProps = {
 
 export default function GroupJoinCard({ form, onJoin, onFieldChange }: GroupJoinCardProps) {
   return (
-    <div className="group-panel-card">
-      <div className="group-panel-title">加入群组</div>
-      <div className="group-join">
-        <label>
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-white/90 p-4">
+      <div className="text-sm font-semibold text-ink">加入群组</div>
+      <div className="grid gap-3">
+        <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
           邀请码/群 ID
-          <input
+          <Input
             type="text"
             placeholder="输入群组邀请码或群 ID"
             name="group_code"
@@ -21,11 +23,11 @@ export default function GroupJoinCard({ form, onJoin, onFieldChange }: GroupJoin
             onChange={(event) => onFieldChange("code", event.target.value)}
           />
         </label>
-        <button className="primary" type="button" onClick={onJoin}>
+        <Button className="h-11 rounded-full" type="button" onClick={onJoin}>
           申请加入
-        </button>
+        </Button>
       </div>
-      <p className="muted">公开群可能需要审核，私密群仅支持邀请码加入。</p>
+      <p className="text-xs text-muted-foreground">公开群可能需要审核，私密群仅支持邀请码加入。</p>
     </div>
   );
 }

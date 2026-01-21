@@ -29,17 +29,17 @@ export default function FriendDetailCard({
   onEncourage
 }: FriendDetailProps) {
   return (
-    <div className="friend-detail">
-      <div className="detail-row">
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-white/90 p-5 text-sm text-muted-foreground shadow-sm">
+      <div className="flex items-center justify-between">
         <span>手机号</span>
-        <strong>{detail?.phone ?? "-"}</strong>
+        <strong className="text-ink">{detail?.phone ?? "-"}</strong>
       </div>
-      <div className="detail-row">
+      <div className="flex items-center justify-between">
         <span>最近打卡</span>
-        <strong>{detail?.last_checkin_at ? "已记录" : "暂无"}</strong>
+        <strong className="text-ink">{detail?.last_checkin_at ? "已记录" : "暂无"}</strong>
       </div>
       {detail ? (
-        <div className="permission-grid">
+        <div className="grid gap-2 md:grid-cols-2">
           <PermissionToggle
             label="允许查看详情"
             checked={detail.permission.can_view_detail}
@@ -64,10 +64,10 @@ export default function FriendDetailCard({
           />
         </div>
       ) : (
-        <span className="muted">正在加载详情...</span>
+        <span className="text-xs text-muted-foreground">正在加载详情...</span>
       )}
 
-      <div className="friend-actions">
+      <div className="flex flex-wrap items-center gap-2">
         <FriendDetailActions
           friend={friend}
           detail={detail}

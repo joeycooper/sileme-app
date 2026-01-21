@@ -7,6 +7,8 @@ It summarizes the current project status and where to continue.
 - Frontend refactor completed for the social module and core pages.
 - Code now follows a strict structure: page entry files are thin, logic in hooks,
   UI in sections, common components/hooks extracted.
+- Product goal: Mobile-first web app; mobile UI/UX should be as close to native as possible.
+- Future target: PWA; prioritize native-like interactions, touch targets, and immersive mobile UX.
 
 ## Read First (Order)
 1) `README.md`
